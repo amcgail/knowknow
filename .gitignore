@@ -1,3 +1,7 @@
+.ipynb_checkpoints/
+.ipynb_checkpoints/*
+desktop.ini
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
