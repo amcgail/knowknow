@@ -4,7 +4,8 @@ The repository provides code and documentation for producing all analyses and fi
 
 # Installation
 
-`pip install science2`
+1. Install Python 3.7
+2. Run `pip install science2`
 
 # Quick start
 
