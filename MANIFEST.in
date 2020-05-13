@@ -1,0 +1,2 @@
+global-include *.ipynb
+global-include *.png

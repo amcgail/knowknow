@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="science2-amcgail", # Replace with your own username
-    version="0.0.3",
+    version="0.0.5",
     author="Alec McGail",
     author_email="amcgail2@gmail.com",
     description="Analyzing the evolution of ideas using citation analysis",
