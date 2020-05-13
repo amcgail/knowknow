@@ -5,7 +5,7 @@ The repository provides code and documentation for producing all analyses and fi
 # Installation
 
 1. Install Python 3.7
-2. Run `pip install science2`
+2. Run `pip install science2-amcgail`
 
 # Quick start
 
