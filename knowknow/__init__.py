@@ -4,7 +4,7 @@ from random import sample, shuffle
 from itertools import chain
 
 from tabulate import tabulate
-
+import re
 
 from pathlib import Path
 from os.path import dirname, join
@@ -22,27 +22,27 @@ import numpy as np
 __all__ = [
     # constants
     "BASEDIR",
-    
+
     # database hooks
     "CIT_DB", "THEORY_DB", "BIB_DB", "WIKI_DB",
-    
+
     # getting counts
-    "get_cnt", "cnt_collapse",
-    
+    "get_cnt", "save_cnt", "cnt_collapse",
+
     # plotting
     "plot_companions", "plot_context",
     'html_companions','partner_citations',
     'citation_characterize',
-    
+
     # custom utils
     "canonical_citation",# "HumanName",
-    
+
     'load_variable', 'save_variable',
     'save_figure', 'save_table',
-    
+
     # common imports
-    "Counter", "defaultdict", "Path", 
-    "np", "nx","sns","pd",
+    "Counter", "defaultdict", "Path",
+    "np", "nx","sns","pd", "re",
     "plt","display","HTML","Counter",
     'sample','shuffle','chain',
     'tabulate'
@@ -58,44 +58,52 @@ THEORY_DB = db['theory']
 WIKI_DB = db['wiki_sociologists']
 BIB_DB = db['bibliography']
 
+DEFAULT_KEYS = ['t','a','c','cy']
+
 cnt_cache = {}
-def get_cnt(name):
-    if name in cnt_cache:
-        cnt = cnt_cache[name]
-    else:
-        names = {
-            "intext.doc": '../120 _ count co-occurrences/cnt_doc.pickle',
-            "intext.ind": '../120 _ count co-occurrences/cnt_ind.pickle',
-            "doc": '../120 _ count co-occurrences/THEORY_DB/cnt_doc.pickle',
-            'wos.all.uid.doc': '../120 _ count co-occurrences/wos_counter_larger/cnt_doc_fullUnique.pickle',
-            'wos.all.uid.ind': '../120 _ count co-occurrences/wos_counter_larger/cnt_ind_fullUnique.pickle',
-        }
-        if name not in names:
-            raise Exception("Please choose one of: %s" % "; ".join(names))
+def get_cnt(name, keys=None):
+    if keys is None:
+        keys = DEFAULT_KEYS
 
-        print("loading from %s"%names[name])
+    cnt = {}
 
-        # load all the counts
-        import pickle
-        from collections import defaultdict, Counter
+    for k in keys:
+        if (name,k) in cnt_cache:
+            cnt[k] = cnt_cache[(name,k)]
+        else:
+            varname = "%s ___ %s" % (name,k)
 
-        cnt = pickle.load( open( join(BASEDIR,names[name]), 'rb') )
-        for k in cnt:
-            cnt[k] = defaultdict(int, cnt[k])
+            this_cnt = defaultdict(int, load_variable(varname))
+            cnt[k] = this_cnt
+            cnt_cache[(name,k)] = this_cnt
 
-        cnt_cache[name] = cnt
-        
-    print(cnt.keys())
+    avail = Path(BASEDIR,"variables").glob("%s ___ *.pickle"%name)
+    avail = [x.name for x in avail]
+    avail = [x.split(".pick")[0] for x in avail]
+
+    print("Loaded keys: %s" % cnt.keys())
+    print("Available keys: %s" % )
     return cnt
+
+cnt_cache = {}
+def save_cnt(name, data={}):
+    
+    for k,count in data.items():
+        cnt_cache[(name,k)] = count
+        
+        varname = "%s ___ %s" % (name,k)
+        
+        print("Saving %s" % varname)
+        save_variable(varname, dict(count))
 
 def cnt_collapse(c, f=lambda x:True, on=None):
     new_c = defaultdict(int)
     for item, count in c.items():
         if not f(item):
             continue
-        
+
         new_c[on(item)] += count
-        
+
     return Counter( dict(new_c.items()) )
 
 
@@ -107,14 +115,14 @@ def cnt_collapse(c, f=lambda x:True, on=None):
 def load_variable(name):
     import pickle
     from collections import defaultdict, Counter
-    
+
     return pickle.load( open( join(BASEDIR,"variables",name), 'rb') )
 
 def save_variable(name, val):
     import pickle
     pickle.dump( val, open( join(BASEDIR,"variables",name), 'wb') )
-    
-            
+
+
 
 
 
@@ -132,8 +140,7 @@ if False:
     class HumanName(HumanNameOld):
         def __init__(self, *args, **kwargs):
             args = list(args)
-
-            import re
+            
             self._gender = None
 
             mustbe = ["Jr","Sr","Mr","Mrs"]
@@ -211,7 +218,7 @@ if False:
 
 def convert_individual(x):
     reg_pattern = r'^%s((,| and| et al).*)?$'
-    
+
     if type(x) == dict:
             return x
     if type(x) == str:
@@ -221,7 +228,7 @@ def convert_individual(x):
                 "0":{"$regex": reg_pattern % " ".join(sp[:-1] ), "$options":'i'},
                 "1": sp[-1]
             }
-        
+
         sp = sp[0]
         try:
             return {
@@ -238,7 +245,7 @@ def convert_individual(x):
     if type(x) == tuple:
         if sum(y is not None for y in x) == 0:
             raise Exception("nothing in this individual search...")
-            
+
         if x[0] is None:
             return {
                 "1":x[1]
@@ -252,7 +259,7 @@ def convert_individual(x):
                 "0":{"$regex": reg_pattern % x[0], "$options":'i'},
                 "1":x[1]
             }
-        
+
     raise Exception("citation guy not dict,str,tuple, or int")
 
 
@@ -277,44 +284,44 @@ def canonical_citation(who):
 
 
 def partner_citations(*authors):
-    
+
     searchTerms = [
         {"citations":{"$elemMatch": convert_individual(author)}}
         for author in authors
     ]
     #print(searchTerms)
-    
+
     search = {"$and": searchTerms }
 
     return CIT_DB.find(search)
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
 # ============================================================
 # ============================================================
 # ======================== SUMMARY FUNCTIONS =================
 # ============================================================
 # ============================================================
-    
-    
-    
-    
-    
+
+
+
+
+
 
 def plot_companions(cnt, who):
     # time trends of this work with others it is cited with
     who = canonical_citation(who)
     others = partner_counter(cnt, who)
-    
+
     to_track = [who] + [tuple(x[0]) for x in others.most_common(7)]
     #print(to_track)
     years = list(range(1970, 2020))
@@ -331,15 +338,15 @@ def plot_companions(cnt, who):
     plt.figure(figsize=(15,5))
     #print([ x.hex for x in A.range_to(B,len(trends)) ])
     plt.stackplot(
-        years, 
-        *list(trends.values()), 
-        labels=[" ".join(x) for x in trends.keys()], 
+        years,
+        *list(trends.values()),
+        labels=[" ".join(x) for x in trends.keys()],
         colors=[ x.hex for x in A.range_to(B,len(trends)) ]
     )
     plt.legend()
-    
-    
-    
+
+
+
 def plot_context(context, draw_totals=False, n=15):
 
     cits = list( CIT_DB.find({"contextPure":{"$regex":r".*%s.*" % context}}) )
@@ -347,15 +354,15 @@ def plot_context(context, draw_totals=False, n=15):
 
     for c in cits:
         c['doc'] = {
-            k:v 
-            for k,v in 
-                THEORY_DB.find_one({"_id":c['doc']}).items() 
+            k:v
+            for k,v in
+                THEORY_DB.find_one({"_id":c['doc']}).items()
             if k in ['_id', 'year', 'authors', 'title', 'journal']
         }
-        
+
     cnt = get_cnt('doc')
 
-    #total = np.array([cnt['y'][y] for y in range(1850,2020)])   
+    #total = np.array([cnt['y'][y] for y in range(1850,2020)])
     #print("%s years" % len(total))
     #plt.plot(range(1850,2020), total)
 
@@ -379,7 +386,7 @@ def plot_context(context, draw_totals=False, n=15):
             for citation in co['citations']:
                 ac[tuple(citation)] += 1
                 ayc[tuple(citation)][co['doc']['year']] += 1
-                
+
     ayc = defaultdict(lambda:defaultdict(set))
     ac = defaultdict(set)
     for co in cits:
@@ -419,7 +426,7 @@ def plot_context(context, draw_totals=False, n=15):
             ayc[a][y]
             for y in years
         ]
-        for a in ayc.keys()    
+        for a in ayc.keys()
     ])
 
     doc_totals = np.sum( everything > 0, axis=0 )
@@ -428,12 +435,12 @@ def plot_context(context, draw_totals=False, n=15):
     hs = []
 
     fig, ax = plt.subplots(figsize=(20,10))
-    
+
     yt = np.array([cnt['y'][y] for y in years])
 
     h = plt.stackplot(
-        years, 
-        *[yci for yci in year_counts.values()], 
+        years,
+        *[yci for yci in year_counts.values()],
         labels=[" ".join(x) for x in year_counts.keys()],
         colors=[ x.hex for x in A.range_to(B,n) ]
     )
@@ -457,11 +464,11 @@ def plot_context(context, draw_totals=False, n=15):
             color="#000000",
             dashes=(2,1)
         )
-    
+
     ax.legend(loc='upper left')
     plt.show()
-    
-    
+
+
     return cits
 
 
@@ -476,7 +483,7 @@ def html_companions(query, outter=5, inner=5):
 
     others = partner_counter(query)
     #print(others.most_common(10))
-    
+
     html = []
 
     num_printed_outter = 0
@@ -490,11 +497,11 @@ def html_companions(query, outter=5, inner=5):
 
         html.append("<ul>")
         num_printed = 0
-        
+
         us_together = list(partner_citations(query, item))
         for r in sample(us_together, min(inner, len(us_together))):
             html.append("<li>%s</li>" % r['contextPure'])
-                
+
         html.append("</ul>")
 
         num_printed_outter += 1
@@ -506,7 +513,7 @@ def html_companions(query, outter=5, inner=5):
 
 
 def citation_characterize(
-    query, 
+    query,
     eliminate_substrings = True,
     skip_identical_p = True,
     min_count = 5,
@@ -516,7 +523,7 @@ def citation_characterize(
     max_to_print_outter = 10,
     max_to_print_inner = 3
 ):
-    
+
     query = canonical_citation(query)
     results = list(partner_citations(query))
 
@@ -524,14 +531,14 @@ def citation_characterize(
 
     from sklearn.feature_selection import chi2
     from sklearn.feature_extraction.text import CountVectorizer
-    
-    
-    
-    
-    
 
-    
-    
+
+
+
+
+
+
+
     #
     # retrieve all citations from the docs the focal results came from
     #
@@ -545,11 +552,11 @@ def citation_characterize(
 
     cv = CountVectorizer( ngram_range=(1,max_tuple+1) )
     X = cv.fit_transform( x['contextPure'] for x in all_citations )
-    
-    
-    
-    
-    
+
+
+
+
+
     html = []
 
     #
@@ -655,10 +662,10 @@ def citation_characterize(
         num_printed += 1
         if num_printed >= max_to_print_outter:
             break
-            
+
     todo = sample(all_citations, 10)
     html.append("<ul>")
-    
+
     for c in todo:
         mydoc = THEORY_DB.find_one({"_id":c['doc']})
 
@@ -680,9 +687,9 @@ def save_figure(name):
     if not outdir.exists():
         outdir.mkdir()
     plt.savefig(str(outdir.joinpath("%s.png" % name)), bbox_inches="tight")
-    
-    
-    
+
+
+
 """
 #the pandas way:
 
@@ -699,7 +706,7 @@ def latex_escape(x):
         x = '{:,}'.format(x)
     else:
         x = str(x)
-    
+
     x = x.replace("%", "\\%")
     x = x.replace("&", "\\&")
     return x
@@ -720,9 +727,9 @@ def save_table(name, *args, **kwargs):
     if not outdir.exists():
         outdir.mkdir()
     outfn = str(outdir.joinpath("%s.tex" % name))
-    
+
     tab_latex = create_table(*args, **kwargs)
-    
+
     with open(outfn, 'w', encoding='utf8') as outf:
         outf.write(tab_latex)
 
@@ -732,19 +739,19 @@ def create_table(rows, headers, caption='', footnotes='', widths=None, columns=2
         headers = [headers]
     assert(len(rows[0]) == len(headers[0]))
     assert(columns in {1,2})
-    
+
     rows = [[latex_escape(x) for x in r] for r in rows]
-    
+
     caption, footnotes = tuple(map(latex_escape, [caption, footnotes]))
-    
+
     columndef = "|%s|" % "|".join("p{%scm}"%x for x in widths)
     col2star = "*" if columns==2 else ""
-    
+
     print([
         list(header_generator(h))
         for h in headers
     ])
-    
+
     header = "\n".join(
         "%s \\\\" % "&".join(header_generator(h))
         for h in headers
