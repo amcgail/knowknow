@@ -1,4 +1,4 @@
 remove dist/*
 python setup.py sdist bdist_wheel
 twine upload dist/*
-pip install --upgrade science2-amcgail
+pip install --upgrade knowknow-amcgail

@@ -10,6 +10,8 @@ from pathlib import Path
 from os.path import dirname, join
 BASEDIR = dirname(__file__)
 
+from csv import reader as creader
+
 import networkx as nx
 import pandas as pd
 import seaborn as sns
@@ -23,11 +25,9 @@ __all__ = [
     # constants
     "BASEDIR",
 
-    # database hooks
-    "CIT_DB", "THEORY_DB", "BIB_DB", "WIKI_DB",
-
     # getting counts
     "get_cnt", "save_cnt", "cnt_collapse",
+    "get_cnt_keys", "plot_count_series",
 
     # plotting
     "plot_companions", "plot_context",
@@ -39,26 +39,23 @@ __all__ = [
 
     'load_variable', 'save_variable',
     'save_figure', 'save_table',
+    "VariableNotFound",
 
     # common imports
     "Counter", "defaultdict", "Path",
     "np", "nx","sns","pd", "re",
     "plt","display","HTML","Counter",
     'sample','shuffle','chain',
-    'tabulate'
+    'tabulate',"creader"
 ]
 
+DEFAULT_KEYS = ['fj.fy','fy','a','c','c.fy']
 
-# DB
-from pymongo import MongoClient
-
-db = MongoClient()['journal_articles']
-CIT_DB = db['citations']
-THEORY_DB = db['theory']
-WIKI_DB = db['wiki_sociologists']
-BIB_DB = db['bibliography']
-
-DEFAULT_KEYS = ['t','a','c','cy']
+def get_cnt_keys(name):
+    avail = Path(BASEDIR,"variables").glob("%s ___ *"%name)
+    avail = [x.name for x in avail]
+    avail = [x.split("___")[1].strip() for x in avail]
+    return avail
 
 cnt_cache = {}
 def get_cnt(name, keys=None):
@@ -77,20 +74,15 @@ def get_cnt(name, keys=None):
             cnt[k] = this_cnt
             cnt_cache[(name,k)] = this_cnt
 
-    avail = Path(BASEDIR,"variables").glob("%s ___ *.pickle"%name)
-    avail = [x.name for x in avail]
-    avail = [x.split(".pick")[0] for x in avail]
+    avail = get_cnt_keys(name)
 
     print("Loaded keys: %s" % cnt.keys())
-    print("Available keys: %s" % )
+    print("Available keys: %s" % avail)
     return cnt
 
-cnt_cache = {}
 def save_cnt(name, data={}):
     
     for k,count in data.items():
-        cnt_cache[(name,k)] = count
-        
         varname = "%s ___ %s" % (name,k)
         
         print("Saving %s" % varname)
@@ -110,13 +102,17 @@ def cnt_collapse(c, f=lambda x:True, on=None):
 
 
 
-
+class VariableNotFound(Exception):
+    pass
 
 def load_variable(name):
     import pickle
     from collections import defaultdict, Counter
 
-    return pickle.load( open( join(BASEDIR,"variables",name), 'rb') )
+    try:
+        return pickle.load( open( join(BASEDIR,"variables",name), 'rb') )
+    except FileNotFoundError:
+        raise VariableNotFound
 
 def save_variable(name, val):
     import pickle
@@ -326,7 +322,7 @@ def plot_companions(cnt, who):
     #print(to_track)
     years = list(range(1970, 2020))
 
-    trends = {c:[ cnt['cy'][(c,y)] for y in years ] for c in to_track}
+    trends = {c:[ cnt['c.fy'][(c,y)] for y in years ] for c in to_track}
     #for c in trends:
     #    plt.plot( years, trends[c], label=c )
     from colour import Color
@@ -774,3 +770,110 @@ def create_table(rows, headers, caption='', footnotes='', widths=None, columns=2
 \\end{table%s}
 """ % (col2star, caption, columndef, header, content, footnotes, col2star)
     return tab
+
+
+
+def plot_count_series(alltop, database, myname=None, overwrite=True):
+    
+    cysum = load_variable("%s.cysum" % database)
+    cits = get_cnt("%s.doc" % database, ['c.fy'])
+
+    cols = 5
+    rows = len(alltop) // cols + bool(len(alltop) % cols) # = 15 for 5
+    rows_per_group = 2
+    groupsize = rows_per_group * cols
+    gs = rows // rows_per_group + bool(rows % rows_per_group)
+
+    for groupi in range(gs):
+        myFnName = "%s.%s" % (myname,groupi)
+        if Path(myFnName).exists() and not overwrite:
+            continue
+        
+        plt.figure(figsize=(cols*4,rows*1.2))
+        plt.subplots_adjust(hspace=0.6, wspace=0)
+
+        for i,x in enumerate(alltop[ groupi*groupsize : (groupi+1)*groupsize]):
+            print(x)
+            x = cysum[x]
+
+            plt.subplot(rows,cols,i+1)
+
+            nt = x['name']
+            nt = nt.split("|")
+            nt = (" ".join(nt[:-1]).title(), nt[-1])
+            #summ(nt)
+
+            cys = cysum[x['name']]
+
+            #yrstart = max(1930, cys['pub'])
+            #yrend = yrstart + 90
+            #yrstart = 1930
+            #yrend = 2020
+            yrstart = 1900
+            yrend = 2020
+            years = range(yrstart, yrend)
+            vals = [cits['c.fy'][x['name'],y] for y in years]
+
+            plt.fill_between(years,vals,color='black',alpha=0.4)
+            title = "%s (%s)" % (x['name'].split("|")[0].split("(")[0].title(), x['pub'])
+            t = plt.text(min(years), 1.1*(max(vals))/1,title, fontsize=14)#*3+min(vals)
+            #t.set_bbox(dict(facecolor='gray', alpha=0.5, edgecolor='black'))
+            plt.axis('off')
+            #linestyles = ['--','-','-.']
+            #for i,k in enumerate(['death1','death2','death3']):
+            #    if x[k] is not None:
+            #        plt.axvline(x[k],min(vals),max(vals),label=k,linestyle=linestyles[i],color='black')
+            #plt.legend();
+            #plt.ylim( plt.ylim()[0], plt.ylim()[0]*1.1 )
+            
+            if False:
+                if plt.xlim()[0] < cys['pub'] < plt.xlim()[1]:
+                    plt.vlines(cys['pub'], plt.ylim()[0],plt.ylim()[1]*0.7, linestyles=['--'])
+                else:
+                    plt.arrow(
+                        1920, 
+                        (max(vals)+min(vals)*3)/4,
+                        -8,
+                        0,
+                    head_width=(max(vals)+min(vals))/(2*3))
+
+            #from matplotlib.patches import Rectangle
+            #extra = Rectangle((0, 0), 1, 1, fc="w", fill=False, edgecolor='none', linewidth=0)
+            #plt.legend([extra], (title,))
+
+            lines = []
+            for decade in range(yrstart,yrend,10):
+                lines += [
+                    (decade+1, decade+10-1), 
+                    (-max(vals)/5, -max(vals)/5), 
+                    'black'
+                ]
+
+            # labeling the max
+            maxy = max(years, key=lambda y:cits['c.fy'][x['name'],y])
+
+            if maxy > 2000:
+                lines += [
+                    (maxy-2, maxy - 10),
+                    (max(vals)*1.05, max(vals)*1.2),
+                    "black"
+                ]
+                plt.text(maxy - 10-4, max(vals)*1.2,max(vals), fontsize=12, verticalalignment='center', horizontalalignment='right')#*3+min(vals)
+            else:
+                lines += [
+                    (maxy+1, maxy + 10),
+                    (max(vals)*1.05, max(vals)*1.2),
+                    "black"
+                ]
+                plt.text(maxy + 10+4, max(vals)*1.2,max(vals), fontsize=12, verticalalignment='center')#*3+min(vals)
+
+            plt.plot(*lines)
+            plt.scatter(
+                [1900,1950,2000],
+                [-max(vals)/5]*3,
+                color='black',
+                s=20
+            )
+
+        save_figure(myFnName)
+        plt.show();
