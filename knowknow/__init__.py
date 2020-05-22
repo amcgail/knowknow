@@ -10,6 +10,9 @@ from pathlib import Path
 from os.path import dirname, join
 BASEDIR = dirname(__file__)
 
+#variable_dir = Path(BASEDIR,"variables")
+variable_dir = Path("C:\\Users\\amcga\\knowknow_variables")
+
 from csv import reader as creader
 
 import networkx as nx
@@ -40,6 +43,8 @@ __all__ = [
     'load_variable', 'save_variable',
     'save_figure', 'save_table',
     "VariableNotFound",
+    
+    "comb", "make_cross",
 
     # common imports
     "Counter", "defaultdict", "Path",
@@ -49,16 +54,76 @@ __all__ = [
     'tabulate',"creader"
 ]
 
-DEFAULT_KEYS = ['fj.fy','fy','a','c','c.fy']
+DEFAULT_KEYS = ['fj.fy','fy','c','c.fy']
 
 def get_cnt_keys(name):
-    avail = Path(BASEDIR,"variables").glob("%s ___ *"%name)
+    avail = variable_dir.glob("%s ___ *"%name)
     avail = [x.name for x in avail]
     avail = [x.split("___")[1].strip() for x in avail]
     return avail
 
+
+
+
+def named_tupelize(d,ctype):
+    keys = sorted(ctype.split("."))
+    
+    def doit(k):
+        if type(k) in [tuple, list]:
+            return make_cross(dict(zip(keys, k)))
+        elif len(keys) == 1:
+            return make_cross({keys[0]:k})
+        else: 
+            raise Exception("strange case...")
+    
+    return {
+        doit(k):v
+        for k,v in d.items()
+    }
+
+
+
+save_nametuples = {}
+def make_cross(*args, **kwargs):
+    global save_nametuples
+    from collections import namedtuple
+    
+    if len(args):
+        assert(type(args[0]) == dict)
+        return make_cross(**args[0])
+    
+    keys = tuple(sorted(kwargs))
+    
+    if keys in save_nametuples:
+        my_named_tuple = save_nametuples[keys]
+    else:
+        my_named_tuple = namedtuple("_".join(keys), keys)
+        save_nametuples[keys] = my_named_tuple
+
+    return my_named_tuple(**kwargs)
+
+
+
+
+
+def comb(x,y):
+    a = set(x.split("."))
+    b = set(y.split("."))
+    
+    return ".".join(sorted(a.union(b)))
+
+class comb_cont:
+    def __init__(**kwargs):
+        from collections import namedtuple
+
+        ntkeys = sorted(k.split("."))
+        my_named_tuple = namedtuple(k.replace(".","_"), ntkeys)
+        return my_named_tuple(**dict(zip(ntkeys, x)))
+
+
 cnt_cache = {}
 def get_cnt(name, keys=None):
+    
     if keys is None:
         keys = DEFAULT_KEYS
 
@@ -70,7 +135,8 @@ def get_cnt(name, keys=None):
         else:
             varname = "%s ___ %s" % (name,k)
 
-            this_cnt = defaultdict(int, load_variable(varname))
+            #print(k)
+            this_cnt = defaultdict(int, named_tupelize( dict(load_variable(varname)), k ))
             cnt[k] = this_cnt
             cnt_cache[(name,k)] = this_cnt
 
@@ -110,13 +176,13 @@ def load_variable(name):
     from collections import defaultdict, Counter
 
     try:
-        return pickle.load( open( join(BASEDIR,"variables",name), 'rb') )
+        return pickle.load( variable_dir.joinpath(name).open('rb') )
     except FileNotFoundError:
-        raise VariableNotFound
+        raise VariableNotFound(name)
 
 def save_variable(name, val):
     import pickle
-    pickle.dump( val, open( join(BASEDIR,"variables",name), 'wb') )
+    pickle.dump( val, variable_dir.joinpath(name).open('wb') )
 
 
 
@@ -773,10 +839,10 @@ def create_table(rows, headers, caption='', footnotes='', widths=None, columns=2
 
 
 
-def plot_count_series(alltop, database, myname=None, overwrite=True):
+
+def plot_count_series(alltop, database, myname=None, overwrite=True, markers={}, cysum=None, ctype='c'):
     
-    cysum = load_variable("%s.cysum" % database)
-    cits = get_cnt("%s.doc" % database, ['c.fy'])
+    cits = get_cnt("%s.doc" % database, [comb(ctype,'fy')])
 
     cols = 5
     rows = len(alltop) // cols + bool(len(alltop) % cols) # = 15 for 5
@@ -812,34 +878,21 @@ def plot_count_series(alltop, database, myname=None, overwrite=True):
             yrstart = 1900
             yrend = 2020
             years = range(yrstart, yrend)
-            vals = [cits['c.fy'][x['name'],y] for y in years]
+            vals = [cits[ comb('fy' , ctype) ][
+                make_cross({
+                    'fy': y,
+                    ctype: x['name']
+                })
+            ] for y in years]
 
             plt.fill_between(years,vals,color='black',alpha=0.4)
-            title = "%s (%s)" % (x['name'].split("|")[0].split("(")[0].title(), x['pub'])
-            t = plt.text(min(years), 1.1*(max(vals))/1,title, fontsize=14)#*3+min(vals)
-            #t.set_bbox(dict(facecolor='gray', alpha=0.5, edgecolor='black'))
-            plt.axis('off')
-            #linestyles = ['--','-','-.']
-            #for i,k in enumerate(['death1','death2','death3']):
-            #    if x[k] is not None:
-            #        plt.axvline(x[k],min(vals),max(vals),label=k,linestyle=linestyles[i],color='black')
-            #plt.legend();
-            #plt.ylim( plt.ylim()[0], plt.ylim()[0]*1.1 )
+            if 'pub' in x:
+                title = "%s (%s)" % (x['name'].split("|")[0].split("(")[0].title(), x['pub'])
+            else:
+                title = x['name']
+            t = plt.text(min(years), 1.1*(max(vals))/1,title, fontsize=14)
             
-            if False:
-                if plt.xlim()[0] < cys['pub'] < plt.xlim()[1]:
-                    plt.vlines(cys['pub'], plt.ylim()[0],plt.ylim()[1]*0.7, linestyles=['--'])
-                else:
-                    plt.arrow(
-                        1920, 
-                        (max(vals)+min(vals)*3)/4,
-                        -8,
-                        0,
-                    head_width=(max(vals)+min(vals))/(2*3))
-
-            #from matplotlib.patches import Rectangle
-            #extra = Rectangle((0, 0), 1, 1, fc="w", fill=False, edgecolor='none', linewidth=0)
-            #plt.legend([extra], (title,))
+            plt.axis('off')
 
             lines = []
             for decade in range(yrstart,yrend,10):
@@ -850,7 +903,11 @@ def plot_count_series(alltop, database, myname=None, overwrite=True):
                 ]
 
             # labeling the max
-            maxy = max(years, key=lambda y:cits['c.fy'][x['name'],y])
+                
+            maxy = max(years, key=lambda y:cits[ comb('fy',ctype) ][ make_cross({
+                    'fy': y,
+                    ctype: x['name']
+                }) ])
 
             if maxy > 2000:
                 lines += [
@@ -874,6 +931,16 @@ def plot_count_series(alltop, database, myname=None, overwrite=True):
                 color='black',
                 s=20
             )
+            
+            if x['name'] in markers:
+                ms = markers[ x['name'] ]
+                plt.scatter(
+                    ms,
+                    [-max(vals)/2]*len(ms),
+                    color='red',
+                    s=30,
+                    marker="^"
+                )
 
         save_figure(myFnName)
         plt.show();

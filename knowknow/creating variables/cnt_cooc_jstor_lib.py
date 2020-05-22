@@ -53,6 +53,31 @@ regex_in_order = [
 
 name_blacklist = calendar.month_name[1:]
 
+
+
+
+
+
+faulty_years = set()
+
+def citation_iterator(t):
+    citations = extractCitation(t)
+    for c in citations:
+        name = c['names']
+        name = name.replace("'s","") # change "Simmel's" to "Simmel"
+        
+        years = c['year'].split(",")
+        for y in years:
+            y = y.strip() # get rid of the extra spacing
+            y = re.findall(r'[0-9]{4}',y) # this strips out the 'a' in '1995a'
+            if not len(y):
+                faulty_years.add(c['year'])
+                continue
+            
+            y = y[0]
+            yield "%s (%s)" % (name, y)
+
+
 def extractCitation(t):
     t = re.sub(r"[-]\n", "", t)
     t = re.sub(r"\s+", " ", t)

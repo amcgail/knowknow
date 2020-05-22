@@ -20,15 +20,27 @@ There is a lot to do! If you find this useful to your work, and would like to co
 
 ## Aimed completion by 5/22/2020 (ben rosche)
 
++ analyses complete, with explanations, annotations, and graphs
+
 ## Aimed completion by 5/29/2020 (committee)
+
++ literature review is tight, written, boom. everything down. finish it.
 
 ## Aimed completion by 6/5/2020 (presentation)
 
 + Externalizing data from the Git repository, so it can be dynamically downloaded / uploaded via AWS
++ trimming the paper and preparing it for publication
 
-## Post-6/5/2020 (likely by others)
+## Possible projects
 
 + The documentation for this project can always be improved. This is typically through people reaching out to me when they have issues. Please [feel free](https://twitter.com/SomeKindOfAlec).
 + An object-oriented model for handling context would prevent the need for so much variable-passing between functions, reduce total code volume, and improve readability.
 + Different datasets and sources could be incorporated, if you have the need, in addition to JSTOR and WoS.
 + If you produce precomputed binaries and have an idea of how we could incorporate the sharing of these binaries within this library, please [DM me](https://twitter.com/SomeKindOfAlec) or something. That would be great.
++ All analyses can be generalized to any counted variable of the citations. This wouldn't be tough, and would have a huge payout.
++ It would be amazing if we could make a graphical interface for this.
+    + user simply imports data, chooses the analyses they want to run, fill in configuration parameters and press "go"
+    + the output is a PDF with the code, visualizations, and explanations for a given analysis
+    + behind the scenes, all this GUI does is run `nbconvert` 
+    + also could allow users to regenerate any/all analyses for each dataset with the click of a button
+    + could provide immediate access to online archives, either to download or upload similar count datasets
