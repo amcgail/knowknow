@@ -1,0 +1,605 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import sys; sys.path.append(_dh[0].split(\"knowknow\")[0])\n",
+    "from knowknow import *"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# User settings"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "definitions_of_death = ['death1','death2','death3','death5']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "#plt.style.use('grayscale')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "linestyles = ['-','--','-.','dotted']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": [
+     "parameters"
+    ]
+   },
+   "outputs": [],
+   "source": [
+    "# note: can be externally modified by meta_executor\n",
+    "setting_no = -1"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "if setting_no == 0:\n",
+    "    database_name = 'sociology-wos'\n",
+    "    dtype = 'ta'\n",
+    "    birth_key = 'first'\n",
+    "    print_name = 'author'\n",
+    "    print_names = 'authors'\n",
+    "    print_birth = 'First citation'\n",
+    "    YMIN,YMAX = 1930, 2010\n",
+    "\n",
+    "elif setting_no == 1:\n",
+    "    database_name = 'sociology-wos'\n",
+    "    dtype = 'c'\n",
+    "    birth_key = 'pub'\n",
+    "    print_name = 'work'\n",
+    "    print_names = 'works'\n",
+    "    print_birth = 'Publication date'\n",
+    "    YMIN,YMAX = 1930, 2010\n",
+    "\n",
+    "elif setting_no == 2:\n",
+    "    database_name = 'sociology-jstor'\n",
+    "    dtype = 't'\n",
+    "    birth_key = 'first'\n",
+    "    print_name = 'term'\n",
+    "    print_names = 'terms'\n",
+    "    print_birth = 'First use'\n",
+    "    YMIN,YMAX = 1965, 2010"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Loading the data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "ysum = load_variable(\"%s.%s.ysum\" % (database_name,dtype))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "list(ysum.items())[:2]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "docs = get_cnt(\"%s.doc\" % database_name, keys=[dtype, comb(dtype,'fy'), 'fy'])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "cits = get_cnt(\"%s.ind\" % database_name, keys=[dtype, comb(dtype,'fy'), 'fy'])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "list(docs[dtype])[:5]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "The following plot shows the percent of "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def birthdate_pdead(YRLOOK):\n",
+    "\n",
+    "    dying_count = defaultdict(lambda:defaultdict(int))\n",
+    "\n",
+    "    step = 5\n",
+    "\n",
+    "    # first we go through and count how many publications born in each year are dead before YRLOOK\n",
+    "\n",
+    "    # loop through entries\n",
+    "    for k, x in ysum.items():\n",
+    "        for dk in definitions_of_death:\n",
+    "            dying_count[dk][(\n",
+    "                (x[birth_key]//step)*step,\n",
+    "                x[dk] is not None and x[dk] < YRLOOK\n",
+    "            )] += 1\n",
+    "\n",
+    "    counts = range((YMIN//step)*step,(YMAX//step)*step,step)\n",
+    "\n",
+    "    for i,dk in enumerate(definitions_of_death):\n",
+    "        probs = [ \n",
+    "            dying_count[dk][(c,True)] / (dying_count[dk][(c,True)]+dying_count[dk][(c,False)])     \n",
+    "            if (dying_count[dk][(c,True)]+dying_count[dk][(c,False)]>0) else 0 \n",
+    "            for c in counts \n",
+    "        ]\n",
+    "        plt.plot(counts,probs,label=dk,linestyle=linestyles[i], color='black')\n",
+    "\n",
+    "    plt.xlabel(\"birth date\")\n",
+    "    plt.ylabel(\"P(dead by %s)\" % YRLOOK)\n",
+    "    plt.legend();\n",
+    "    plt.ylim(0,1)\n",
+    "    \n",
+    "    save_figure(\"%s.Probability of cited %s death by %s, by cohort\" % (database_name, print_name, YRLOOK) )"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "birthdate_pdead(1975)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "birthdate_pdead(1985)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "birthdate_pdead(1995)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "birthdate_pdead(2005)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "for YRLOOK in range(1980,2020,10):\n",
+    "\n",
+    "    born = lambda x: x[birth_key]\n",
+    "    died = lambda x: x[death_key]\n",
+    "\n",
+    "    cits_in_range = defaultdict(int)\n",
+    "\n",
+    "    for cross, count in cits[ comb(dtype, 'fy') ].items():\n",
+    "        if getattr(cross,dtype) not in ysum:\n",
+    "            continue\n",
+    "        if not( YRLOOK <= cross.fy <= YRLOOK+5 ):\n",
+    "            continue\n",
+    "        cits_in_range[ ysum[ getattr(cross,dtype) ][birth_key] ] += count\n",
+    "\n",
+    "    years = range(0,100,1)\n",
+    "    props = np.array([\n",
+    "        cits_in_range[YRLOOK - x] for x in years  # transform to ages\n",
+    "    ])\n",
+    "    props = props/np.sum(props)\n",
+    "    props *= 100\n",
+    "\n",
+    "    plt.plot(\n",
+    "        years,\n",
+    "        props,\n",
+    "        #label=\"%s (%s)\" % (YRLOOK,num)\n",
+    "        label=YRLOOK\n",
+    "    );\n",
+    "    plt.scatter(years,props,s=5)\n",
+    "\n",
+    "plt.title(\"Age Distribution - cited %s in decade\" % print_names)\n",
+    "plt.xlim((-5,30))\n",
+    "plt.ylim((0,plt.ylim()[1]*1.2))\n",
+    "plt.yticks(\n",
+    "    range(0,int(plt.ylim()[1]),1),\n",
+    "    [\"%s%%\"%x for x in range(0,int(plt.ylim()[1]),1)]\n",
+    ")\n",
+    "plt.ylabel(\"P(Age)\")\n",
+    "plt.xlabel(\"Age\")\n",
+    "lgnd = plt.legend(fancybox=True, title='in decade', prop={'size': 12})\n",
+    "\n",
+    "for h in lgnd.legendHandles:\n",
+    "    h._sizes = [30]\n",
+    "\n",
+    "save_figure(\"%s.Cited %s age distribution, by decade of citation\" % (database_name, print_name))\n",
+    "#plt.legend()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "YLOOK = 2000\n",
+    "\n",
+    "for death_key in definitions_of_death:\n",
+    "\n",
+    "    born = lambda x: x[birth_key]\n",
+    "    died = lambda x: x[death_key]\n",
+    "\n",
+    "    years = range(YMIN,YMAX)\n",
+    "    pdied = {\n",
+    "        y: Counter( (died(x) is not None and died(x)<=YLOOK) for x in ysum.values() if x['first']==y ) + \n",
+    "            Counter( \"total\" for x in ysum.values() if x['first']==y )\n",
+    "        for y in years\n",
+    "    }\n",
+    "\n",
+    "    props = np.array([ pdied[y][True]/pdied[y]['total'] if pdied[y]['total']>0 else np.nan for y in years ])\n",
+    "\n",
+    "    plt.plot(\n",
+    "        years,\n",
+    "        props*100,\n",
+    "        label=death_key\n",
+    "    );\n",
+    "    plt.scatter(years,props*100,s=5)\n",
+    "    #plt.errorbar(years,percents,se*100)\n",
+    "\n",
+    "plt.title(\"Proportion %s dead, by cohort\" % print_names.lower())\n",
+    "plt.yticks(\n",
+    "    range(0,110,10),\n",
+    "    [\"%s%%\"%x for x in range(0,110,10)]\n",
+    ")\n",
+    "plt.ylabel(\"Percent dead\")\n",
+    "plt.xlabel(\"Date of %s\" % print_birth.lower())\n",
+    "\n",
+    "plt.xlim(1960,YMAX)\n",
+    "\n",
+    "\n",
+    "plt.legend()\n",
+    "\n",
+    "save_figure(\"%s.Proportion of %s dead by %s, by cohort\" % (database_name, print_names.lower(), YLOOK))\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# this analysis doesn't make sense for terms or people\n",
+    "if dtype == 'c':\n",
+    "\n",
+    "    cc = Counter(x['first'] - x[birth_key] for x in ysum.values() )\n",
+    "    x = range(0,20,1)\n",
+    "    plt.bar(\n",
+    "        x,\n",
+    "        [cc[xx] for xx in x],\n",
+    "        1,\n",
+    "        alpha=0.1\n",
+    "    )\n",
+    "\n",
+    "    plt.bar(\n",
+    "        x,\n",
+    "        [cc[xx] for xx in x],\n",
+    "        1,\n",
+    "        color='black',\n",
+    "        fill=False,\n",
+    "        linestyle='-'\n",
+    "    )\n",
+    "\n",
+    "    ys = range(0,70000, 10000)\n",
+    "    plt.yticks(\n",
+    "        ys,\n",
+    "        [\"%dk\"%(x//1000) for x in ys]\n",
+    "    )\n",
+    "\n",
+    "    plt.xticks(\n",
+    "        range(0,21,1)\n",
+    "    );\n",
+    "\n",
+    "    plt.grid(False, axis='x')\n",
+    "\n",
+    "    plt.ylabel(\"Number of works\")\n",
+    "    plt.xlabel(\"Number of years until %s\"%print_birth.lower());\n",
+    "\n",
+    "    save_figure(\"%s.What about SBs (cited %s)\"%(database_name, print_names))"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.5"
+  },
+  "papermill": {
+   "duration": 0.067791,
+   "end_time": "2020-05-22T21:51:06.605892",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "G:\\My Drive\\projects\\qualitative analysis of literature\\post 5-12-2020\\git repository _ citation-deaths\\knowknow\\analyses\\demographics.ipynb",
+   "output_path": "G:\\My Drive\\projects\\qualitative analysis of literature\\post 5-12-2020\\git repository _ citation-deaths\\knowknow\\analyses\\demographics.html",
+   "parameters": {},
+   "start_time": "2020-05-22T21:51:06.538101",
+   "version": "2.1.1"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}

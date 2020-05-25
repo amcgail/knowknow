@@ -1,4 +1,4 @@
-from IPython.core.display import display, HTML
+from IPython.core.display import display, HTML, Markdown
 from collections import Counter, defaultdict
 from random import sample, shuffle
 from itertools import chain
@@ -15,6 +15,12 @@ variable_dir = Path("C:\\Users\\amcga\\knowknow_variables")
 
 from csv import reader as creader
 
+import yaml
+DOCS = yaml.load(
+    Path(BASEDIR,"documentation.yaml").open('r',encoding='utf8'), 
+    Loader=yaml.FullLoader
+)
+
 import networkx as nx
 import pandas as pd
 import seaborn as sns
@@ -26,7 +32,7 @@ import numpy as np
 
 __all__ = [
     # constants
-    "BASEDIR",
+    "BASEDIR", "DOCS",
 
     # getting counts
     "get_cnt", "save_cnt", "cnt_collapse",
@@ -45,11 +51,13 @@ __all__ = [
     "VariableNotFound",
     
     "comb", "make_cross",
+    
+    "showdocs",
 
     # common imports
     "Counter", "defaultdict", "Path",
     "np", "nx","sns","pd", "re",
-    "plt","display","HTML","Counter",
+    "plt","display","HTML","Counter","Markdown",
     'sample','shuffle','chain',
     'tabulate',"creader"
 ]
@@ -840,13 +848,19 @@ def create_table(rows, headers, caption='', footnotes='', widths=None, columns=2
 
 
 
-def plot_count_series(alltop, database, myname=None, overwrite=True, markers={}, cysum=None, ctype='c'):
+def plot_count_series(alltop, database, myname=None, 
+    overwrite=True, 
+    markers={}, print_names=None, 
+    ctype='c', yearly_prop=False, 
+    xlim_display=(1890,2030), xlim_data=(1900,2020),
+    cols = 5,
+    rows_per_group = 2,
+        count_unit='doc'):
     
-    cits = get_cnt("%s.doc" % database, [comb(ctype,'fy')])
+    cits = get_cnt("%s.%s" % (database,count_unit), [comb(ctype,'fy'),'fy'])
 
-    cols = 5
     rows = len(alltop) // cols + bool(len(alltop) % cols) # = 15 for 5
-    rows_per_group = 2
+    
     groupsize = rows_per_group * cols
     gs = rows // rows_per_group + bool(rows % rows_per_group)
 
@@ -858,39 +872,39 @@ def plot_count_series(alltop, database, myname=None, overwrite=True, markers={},
         plt.figure(figsize=(cols*4,rows*1.2))
         plt.subplots_adjust(hspace=0.6, wspace=0)
 
-        for i,x in enumerate(alltop[ groupi*groupsize : (groupi+1)*groupsize]):
-            print(x)
-            x = cysum[x]
-
+        for i,name in enumerate(alltop[ groupi*groupsize : (groupi+1)*groupsize]):
+            print(name)
+            
             plt.subplot(rows,cols,i+1)
 
-            nt = x['name']
-            nt = nt.split("|")
-            nt = (" ".join(nt[:-1]).title(), nt[-1])
-            #summ(nt)
-
-            cys = cysum[x['name']]
-
-            #yrstart = max(1930, cys['pub'])
-            #yrend = yrstart + 90
-            #yrstart = 1930
-            #yrend = 2020
-            yrstart = 1900
-            yrend = 2020
+            yrstart,yrend = xlim_data
             years = range(yrstart, yrend)
             vals = [cits[ comb('fy' , ctype) ][
                 make_cross({
                     'fy': y,
-                    ctype: x['name']
+                    ctype: name
                 })
             ] for y in years]
+            
+            if yearly_prop:
+                vals = [
+                    vals[yi] / cits['fy'][(y,)]
+                    if vals[yi]>0 else 0
+                    for yi,y in enumerate(years)
+                ]
 
             plt.fill_between(years,vals,color='black',alpha=0.4)
-            if 'pub' in x:
-                title = "%s (%s)" % (x['name'].split("|")[0].split("(")[0].title(), x['pub'])
+            
+            if print_names is not None:
+                title = print_names(name)
             else:
-                title = x['name']
-            t = plt.text(min(years), 1.1*(max(vals))/1,title, fontsize=14)
+                title = name
+                
+            if len(title) >= 40:
+                title = title[:37]+"..."
+                
+            #t = plt.text(min(years) + (max(years)-min(years))/2, 1.2*(max(vals))/1,title, fontsize=13)
+            plt.title(title)
             
             plt.axis('off')
 
@@ -906,23 +920,36 @@ def plot_count_series(alltop, database, myname=None, overwrite=True, markers={},
                 
             maxy = max(years, key=lambda y:cits[ comb('fy',ctype) ][ make_cross({
                     'fy': y,
-                    ctype: x['name']
+                    ctype: name
                 }) ])
+            
+            max_num = max(vals)
+            if yearly_prop:
+                max_num = "%0.1f%%"%(max_num*100)
 
-            if maxy > 2000:
-                lines += [
-                    (maxy-2, maxy - 10),
-                    (max(vals)*1.05, max(vals)*1.2),
-                    "black"
-                ]
-                plt.text(maxy - 10-4, max(vals)*1.2,max(vals), fontsize=12, verticalalignment='center', horizontalalignment='right')#*3+min(vals)
+            if False:
+                # dynamic, angled, kind of cool but not robust
+                if maxy > 2000:
+                    lines += [
+                        (maxy-2, maxy - 10),
+                        (max(vals)*1.05, max(vals)*1.2),
+                        "black"
+                    ]
+                    plt.text(maxy - 10-4, max(vals)*1.2,max_num, fontsize=12, verticalalignment='center', horizontalalignment='right')#*3+min(vals)
+                else:
+                    lines += [
+                        (maxy+1, maxy + 10),
+                        (max(vals)*1.05, max(vals)*1.2),
+                        "black"
+                    ]
+                    plt.text(maxy + 10+4, max(vals)*1.2,max_num, fontsize=12, verticalalignment='center')#*3+min(vals)
             else:
                 lines += [
-                    (maxy+1, maxy + 10),
-                    (max(vals)*1.05, max(vals)*1.2),
+                    (xlim_display[1]-10, xlim_display[1]-5),
+                    (max(vals), max(vals)),
                     "black"
                 ]
-                plt.text(maxy + 10+4, max(vals)*1.2,max(vals), fontsize=12, verticalalignment='center')#*3+min(vals)
+                plt.text(xlim_display[1]-3, max(vals), max_num, fontsize=12, verticalalignment='center', horizontalalignment='left')#*3+min(vals)
 
             plt.plot(*lines)
             plt.scatter(
@@ -932,15 +959,46 @@ def plot_count_series(alltop, database, myname=None, overwrite=True, markers={},
                 s=20
             )
             
-            if x['name'] in markers:
-                ms = markers[ x['name'] ]
-                plt.scatter(
-                    ms,
-                    [-max(vals)/2]*len(ms),
-                    color='red',
-                    s=30,
-                    marker="^"
-                )
+            plt.xlim(xlim_display)
+            
+            if name in markers:
+                ms = markers[ name ]
+                if type(ms) == list:
+                    plt.scatter(
+                        ms,
+                        [-max(vals)/2]*len(ms),
+                        color='red',
+                        s=30,
+                        marker="^"
+                    )
+                elif type(ms) == dict:
+                    for k,v in ms.items():
+                        plt.text(k, -max(vals)/2, v)
 
         save_figure(myFnName)
         plt.show();
+        
+        
+        
+        
+        
+# print the documentation for this file, if it exists!
+def showdocs(uid):
+    md = []
+    
+    assert( uid in DOCS )
+    
+    d = DOCS[uid]
+    
+    md += ["# %s\n\n%s" % (d['name'],d['desc'])]
+
+    # citations
+    if 'refs' in d and len(d['refs']):
+        md += ["# References"]
+        md += ["\n".join("+ %s" % z for z in d['refs'])]
+
+    if not len(md):
+        display(Markdown("No documentation found for `%s`"%uid))
+        return
+    
+    display(Markdown("\n\n\n\n".join(md)))
