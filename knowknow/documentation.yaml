@@ -1,3 +1,116 @@
+100lifespans_heatmap1:
+    name: Lifespans of authors in the citations of Sociologists, (1950 - 1959)
+    fn: "Top 100 lifespans (sociology-wos, ta, top_cit_1950s, raw*"
+    desc:
+        2564 authors received the most citations of their lifetime so far in one year of this decade.
+        Of these, the following figure depicts the entire citation trajectory of each of the 100 most cited authors in this group.
+
+
+        The x-axis represents age (time since first mention in the dataset).
+        The y-axis indexes the works themselves, which are reproduced below.
+        The dark area of the figure to the right represents 2015 and further.
+        Citation histories are placed vertically according to the summed absolute difference between each subseqent time-series.
+
+
+        0. scodel, 1. roethlisberger, 2. pelzel, 3. windells, 4. hornseth, 5. blaustein, 6. liepmann, 7. powelson, 8. wehrwein, 9. cassady, 10. fortune, 11. whetten, 12. orlansky, 13. duncker, 14. overholser, 15. bascom, 16. bienstock, 17. kains, 18. wecter, 19. foenander, 20. selekman, 21. mowrer, 22. colcord, 23. kutak, 24. ohlin, 25. gloster, 26. terman, 27. mcclenahan, 28. waibel, 29. dymond, 30. benoitsmullyan, 31. gratiaen, 32. mangus, 33. schnepp, 34. gamio, 35. ducoff, 36. vonrhode
+
+100lifespans_heatmap2:
+    name: Lifespans of authors in the citations of Sociologists, (1960 - 1969)
+    fn: "Top 100 lifespans (sociology-wos, ta, top_cit_1960s, raw*"
+    desc:
+        7117 authors received the most citations of their lifetime so far in one year of this decade.
+        Of these, the following figure depicts the entire citation trajectory of each of the 100 most cited authors in this group.
+
+
+        The x-axis represents age (time since first mention in the dataset).
+        The y-axis indexes the works themselves, which are reproduced below.
+        The dark area of the figure to the right represents 2015 and further.
+        Citation histories are placed vertically according to the summed absolute difference between each subseqent time-series.
+
+
+        0. hajda, 1. marvick, 2. majumdar, 3. northrop, 4. fenchel, 5. haer, 6. jaco, 7. fanfani, 8. burling, 9. clinard, 10. simey, 11. presthus, 12. omari, 13. marris, 14. mccord, 15. busia, 16. menzel, 17. hogbin, 18. reissman, 19. gutkind, 20. greenblum, 21. wearmouth, 22. cloward, 23. hoebel, 24. sprott, 25. vonwiese, 26. redfield, 27. kuder, 28. congalton, 29. bastide, 30. copp, 31. benney, 32. marcson, 33. wahlke, 34. manis, 35. konig, 36. winterbottom, 37. dinitz, 38. fliegel, 39. glanzer, 40. goldhamer, 41. cumming, 42. coutu, 43. shevky, 44. laskin, 45. fellin, 46. hovland, 47. dunham, 48. pfeil, 49. nottingham, 50. montague, 51. erasmus, 52. honigmann, 53. spectorsky, 54. shaycoft, 55. mcelrath, 56. panunzio, 57. saenger, 58. cowhig, 59. ausubel, 60. spykman, 61. silvert, 62. wessen, 63. brunner, 64. zborowski, 65. hoos, 66. kluckhohn, 67. bredemeier, 68. frenkelbrunswik, 69. loomis, 70. altus, 71. greenblatt, 72. larrabee, 73. pepitone, 74. opler, 75. lionberger, 76. koos, 77. truxal, 78. broadus, 79. radcliffebrown, 80. hoselitz, 81. viteles, 82. hetzler, 83. newfield, 84. massarik, 85. mccleery, 86. rostovtzeff, 87. thurstone, 88. gebhard, 89. welford, 90. tappan, 91. klapper, 92. dai, 93. videbeck, 94. anshen, 95. hollingshead, 96. burchinal, 97. belknap, 98. coolidge, 99. miyamoto
+
+100lifespans_heatmap3:
+    name: Lifespans of authors in the citations of Sociologists, (1970 - 1979)
+    fn: "Top 100 lifespans (sociology-wos, ta, top_cit_1970s, raw*"
+    desc:
+        30588 authors received the most citations of their lifetime so far in one year of this decade.
+        Of these, the following figure depicts the entire citation trajectory of each of the 100 most cited authors in this group.
+
+
+        The x-axis represents age (time since first mention in the dataset).
+        The y-axis indexes the works themselves, which are reproduced below.
+        The dark area of the figure to the right represents 2015 and further.
+        Citation histories are placed vertically according to the summed absolute difference between each subseqent time-series.
+
+
+        0. blalock, 1. newcomb, 2. moynihan, 3. seeman, 4. mechanic, 5. luckmann, 6. glock, 7. winch, 8. moskos, 9. sudnow, 10. blauner, 11. treiman, 12. heer, 13. siegel, 14. gerth, 15. komarovsky, 16. skolnick, 17. lemert, 18. gibbs, 19. eisenstadt, 20. nisbet, 21. galbraith, 22. glazer, 23. smelser, 24. stouffer, 25. fromm, 26. sorokin, 27. homans, 28. blood, 29. cicourel, 30. myrdal, 31. mcclelland, 32. easton, 33. litwak, 34. tannenbaum, 35. shibutani, 36. lukacs, 37. lipset, 38. mannheim, 39. greer, 40. scheff, 41. hodge, 42. horton, 43. chambliss, 44. jencks, 45. sussman, 46. yinger, 47. dahrendorf, 48. greeley, 49. riesman, 50. wilensky, 51. selznick, 52. stinchcombe, 53. reiss, 54. lynd, 55. herberg, 56. inkeles, 57. hyman, 58. caplow, 59. bott, 60. gusfield, 61. bogue, 62. goode, 63. landis, 64. etzioni, 65. janowitz, 66. bales, 67. olsen, 68. alford, 69. matza, 70. parsons, 71. laslett, 72. nye, 73. bendix, 74. runciman, 75. cartwright, 76. hawley, 77. middleton, 78. ryder, 79. cutright, 80. scanzoni, 81. rokeach, 82. parkin, 83. shils, 84. ogburn, 85. rex, 86. ehrlich, 87. kahl, 88. demerath, 89. srole, 90. lenski, 91. coser, 92. berelson, 93. gouldner, 94. kornhauser, 95. liebow, 96. heise, 97. banfield, 98. kuhn, 99. rainwater
+
+
+100lifespans_heatmap4:
+    name: Lifespans of authors in the citations of Sociologists, (1980 - 1989)
+    fn: "Top 100 lifespans (sociology-wos, ta, top_cit_1980s, raw*"
+    desc:
+        39359 authors received the most citations of their lifetime so far in one year of this decade.
+        Of these, the following figure depicts the entire citation trajectory of each of the 100 most cited authors in this group.
+
+
+        The x-axis represents age (time since first mention in the dataset).
+        The y-axis indexes the works themselves, which are reproduced below.
+        The dark area of the figure to the right shows 2015 and further.
+        Citation histories are placed vertically according to the summed absolute difference between each subseqent time-series.
+
+
+        0. joreskog, 1. wolfgang, 2. rodman, 3. lopata, 4. nie, 5. oberschall, 6. bainbridge, 7. palmore, 8. child, 9. wirth, 10. dohrenwend, 11. zeitlin, 12. driver, 13. centers, 14. bradburn, 15. spilerman, 16. coombs, 17. schur, 18. zurcher, 19. hammond, 20. cain, 21. mueller, 22. kohlberg, 23. hope, 24. land, 25. gorsuch, 26. vandenberghe, 27. lindblom, 28. schuman, 29. otto, 30. liska, 31. shepard, 32. hadden, 33. bishop, 34. verbrugge, 35. freedman, 36. lester, 37. chomsky, 38. gurr, 39. lyman, 40. paige, 41. kish, 42. wrong, 43. aronowitz, 44. fuguitt, 45. fienberg, 46. neugarten, 47. quinney, 48. offe, 49. burch, 50. antonovsky, 51. westoff, 52. lenin, 53. coale, 54. bluestone, 55. murdock, 56. poulantzas, 57. lowenthal, 58. doeringer, 59. rotter, 60. hempel, 61. oneill, 62. hymes, 63. levinson, 64. goody, 65. tittle, 66. aries, 67. boserup, 68. form, 69. spitzer, 70. miliband, 71. dye, 72. breton, 73. illich, 74. taeuber, 75. hauser, 76. blumberg, 77. hindelang, 78. braverman, 79. rossi, 80. rapoport, 81. featherman, 82. spanier, 83. knoke, 84. gurin, 85. hanushek, 86. hagen, 87. unger, 88. masters, 89. hindess, 90. boulding, 91. lasch, 92. cressey, 93. hibbs, 94. frisbie, 95. cantril, 96. goldberger, 97. modell, 98. dumont, 99. kerlinger
+
+100lifespans_heatmap5:
+    name: Lifespans of authors in the citations of Sociologists, (1990 - 1999)
+    fn: "Top 100 lifespans (sociology-wos, ta, top_cit_1990s, raw*"
+    desc:
+        34416 authors received the most citations of their lifetime so far in one year of this decade.
+        Of these, the following figure depicts the entire citation trajectory of each of the 100 most cited authors in this group.
+
+
+        The x-axis represents age (time since first mention in the dataset).
+        The y-axis indexes the works themselves, which are reproduced below.
+        The dark area of the figure to the right represents 2015 and further.
+        Citation histories are placed vertically according to the summed absolute difference between each subseqent time-series.
+
+
+        0. kornai, 1. ashworth, 2. pollert, 3. rothman, 4. summers, 5. trivers, 6. nelsen, 7. gove, 8. press, 9. piore, 10. gilligan, 11. hannan, 12. polachek, 13. tuma, 14. keyfitz, 15. lennon, 16. grossberg, 17. neter, 18. herrnstein, 19. pahl, 20. thurow, 21. cantor, 22. kluegel, 23. sweet, 24. spitze, 25. box, 26. deem, 27. marini, 28. staples, 29. coverman, 30. cleary, 31. maddala, 32. gelles, 33. mott, 34. eisenstein, 35. wiley, 36. dore, 37. dornbusch, 38. chodorow, 39. iso-ahola, 40. pleck, 41. bane, 42. fossett, 43. dollard, 44. cockburn, 45. willmott, 46. aldrich, 47. herskovits, 48. rollins, 49. friedan, 50. london, 51. csikszentmihaly.m, 52. bahr, 53. felmlee, 54. rosaldo, 55. clegg, 56. oakley, 57. parcel, 58. odonnell, 59. scully, 60. stolzenberg, 61. crandall, 62. yamaguchi, 63. kanter, 64. lyotard, 65. labov, 66. delacroix, 67. blumstein, 68. spenner, 69. mouzelis, 70. markovsky, 71. handler, 72. menaghan, 73. roos, 74. coulter, 75. farley, 76. obrien, 77. maccoby, 78. mehan, 79. clogg, 80. sudman, 81. lieberson, 82. roof, 83. berk, 84. straus, 85. roemer, 86. pollak, 87. kreps, 88. perrow, 89. aldous, 90. abrahamson, 91. liebman, 92. abercrombie, 93. hiller, 94. szelenyi, 95. demo, 96. fararo, 97. skvoretz, 98. silberman, 99. chafetz
+
+100lifespans_heatmap6:
+    name: Lifespans of authors in the citations of Sociologists, (2000 - 2009)
+    fn: "Top 100 lifespans (sociology-wos, ta, top_cit_2000s, raw*"
+    desc:
+        36099 authors received the most citations of their lifetime so far in one year of this decade.
+        Of these, the following figure depicts the entire citation trajectory of each of the 100 most cited authors in this group.
+
+
+        The x-axis represents age (time since first mention in the dataset).
+        The y-axis indexes the works themselves, which are reproduced below.
+        The dark area of the figure to the right represents 2015 and further.
+        Citation histories are placed vertically according to the summed absolute difference between each subseqent time-series.
+
+
+        0. spain, 1. corcoran, 2. cernkovich, 3. rieff, 4. ewen, 5. ascione, 6. winter, 7. boden, 8. fuligni, 9. billy, 10. shilling, 11. mosse, 12. wrigley, 13. kain, 14. beatty, 15. glassner, 16. mcdonough, 17. waldron, 18. mchale, 19. astone, 20. crouter, 21. mccormick, 22. spender, 23. kotler, 24. hedges, 25. lyson, 26. thorne, 27. beggs, 28. hirst, 29. rappaport, 30. reinharz, 31. donahue, 32. featherstone, 33. fogel, 34. delphy, 35. geis, 36. johnstone, 37. bordo, 38. seale, 39. nelkin, 40. picou, 41. crick, 42. titmuss, 43. poster, 44. psathas, 45. haines, 46. dickens, 47. sabo, 48. lehrer, 49. hecht, 50. ogbu, 51. samdahl, 52. maines, 53. kagan, 54. miethe, 55. mulkay, 56. maynard, 57. himmelfarb, 58. beattie, 59. hanson, 60. hammitt, 61. agger, 62. knights, 63. acheson, 64. kay, 65. schulze, 66. rook, 67. mauthner, 68. kasarda, 69. vandijk, 70. steelman, 71. mackay, 72. chantala, 73. mcallister, 74. shelby, 75. pollard, 76. jessor, 77. hagenaars, 78. coffey, 79. tickamyer, 80. bosk, 81. spilka, 82. donaldson, 83. tienda, 84. isoahola, 85. blaug, 86. gubrium, 87. wagenaar, 88. aseltine, 89. astin, 90. bryk, 91. gorz, 92. hanks, 93. grimshaw, 94. heelas, 95. hebdige, 96. rutter, 97. rosenstone, 98. arluke, 99. munch
+
+100lifespans_heatmap2:
+    name: Lifespans of authors in the citations of Sociologists, (2010 - 2018)
+    fn: "Top 100 lifespans (sociology-wos, ta, top_cit_2010s, raw*"
+    desc:
+        7117 authors received the most citations of their lifetime so far in one year of this decade.
+        Of these, the following figure depicts the entire citation trajectory of each of the 100 most cited authors in this group.
+
+
+        The x-axis represents age (time since first mention in the dataset).
+        The y-axis indexes the works themselves, which are reproduced below.
+        The dark area of the figure to the right represents 2015 and further.
+        Citation histories are placed vertically according to the summed absolute difference between each subseqent time-series.
+
+
+        0. green, 1. bell, 2. campbell, 3. gamson, 4. robinson, 5. adams, 6. putnam, 7. mills, 8. edwards, 9. friedman, 10. lewis, 11. harris, 12. fox, 13. young, 14. thompson, 15. peterson, 16. jackson, 17. coleman, 18. butler, 19. strauss, 20. baker, 21. anderson, 22. alexander, 23. ross, 24. duncan, 25. marx, 26. becker, 27. hall, 28. shaw, 29. garfinkel, 30. foucault, 31. rosenberg, 32. miller, 33. rose, 34. giddens, 35. allen, 36. james, 37. turner, 38. evans, 39. latour, 40. kim, 41. wilson, 42. tilly, 43. portes, 44. brown, 45. rogers, 46. jacobs, 47. van, 48. merton, 49. de, 50. granovetter, 51. erikson, 52. taylor, 53. white, 54. snow, 55. hughes, 56. cook, 57. habermas, 58. hunter, 59. morris, 60. atkinson, 61. hill, 62. gordon, 63. hochschild, 64. nelson, 65. katz, 66. blumer, 67. sampson, 68. marshall, 69. cohen, 70. bourdieu, 71. king, 72. beck, 73. goodman, 74. glaser, 75. dimaggio, 76. jenkins, 77. smith, 78. meyer, 79. walker, 80. blau, 81. scott, 82. connell, 83. goffman, 84. davis, 85. collins, 86. allison, 87. bauman, 88. simon, 89. west, 90. harvey, 91. lee, 92. schneider, 93. stark, 94. schwartz, 95. bennett, 96. geertz, 97. berger, 98. massey, 99. douglas
+
 dead_now_cohort:
     fn: Probability of cited * death by 2005, by cohort (sociology-*)
     name: Probability of death by cohort
