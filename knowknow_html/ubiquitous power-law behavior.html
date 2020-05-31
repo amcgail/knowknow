@@ -13095,15 +13095,42 @@ div#notebook {
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing code_cell rendered">
+<div class="cell border-box-sizing code_cell rendered celltag_parameters">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cits_name</span> <span class="o">=</span> <span class="s2">&quot;wos&quot;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">database_name</span> <span class="o">=</span> <span class="s2">&quot;sociology-wos&quot;</span>
+<span class="n">dtype</span> <span class="o">=</span> <span class="s1">&#39;c&#39;</span>
+</pre></div>
 
-<span class="n">cits</span> <span class="o">=</span> <span class="n">get_cnt</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.ind&quot;</span><span class="o">%</span><span class="k">cits_name</span>, [&#39;c.fy&#39;,&#39;fy&#39;])
-<span class="n">cysum</span> <span class="o">=</span> <span class="n">load_variable</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.cysum&quot;</span><span class="o">%</span><span class="k">cits_name</span>)
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered celltag_injected-parameters">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Parameters</span>
+<span class="n">database_name</span> <span class="o">=</span> <span class="s2">&quot;sociology-jstor&quot;</span>
+<span class="n">dtype</span> <span class="o">=</span> <span class="s2">&quot;t&quot;</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cits</span> <span class="o">=</span> <span class="n">get_cnt</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.ind&quot;</span><span class="o">%</span><span class="k">database_name</span>, [comb(dtype,&#39;fy&#39;),&#39;fy&#39;,dtype])
+<span class="n">cysum</span> <span class="o">=</span> <span class="n">load_variable</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">.ysum&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">database_name</span><span class="p">,</span><span class="n">dtype</span><span class="p">))</span>
 </pre></div>
 
     </div>
@@ -13119,41 +13146,10 @@ div#notebook {
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_text output_error">
-<pre>
-<span class="ansi-red-intense-fg ansi-bold">---------------------------------------------------------------------------</span>
-<span class="ansi-red-intense-fg ansi-bold">FileNotFoundError</span>                         Traceback (most recent call last)
-<span class="ansi-green-intense-fg ansi-bold">G:\My Drive\projects\qualitative analysis of literature\post 5-12-2020\git repository _ citation-deaths\knowknow\__init__.py</span> in <span class="ansi-cyan-fg">load_variable</span><span class="ansi-blue-intense-fg ansi-bold">(name)</span>
-<span class="ansi-green-fg">    112</span>     <span class="ansi-green-intense-fg ansi-bold">try</span><span class="ansi-yellow-intense-fg ansi-bold">:</span>
-<span class="ansi-green-intense-fg ansi-bold">--&gt; 113</span><span class="ansi-yellow-intense-fg ansi-bold">         </span><span class="ansi-green-intense-fg ansi-bold">return</span> pickle<span class="ansi-yellow-intense-fg ansi-bold">.</span>load<span class="ansi-yellow-intense-fg ansi-bold">(</span> open<span class="ansi-yellow-intense-fg ansi-bold">(</span> join<span class="ansi-yellow-intense-fg ansi-bold">(</span>BASEDIR<span class="ansi-yellow-intense-fg ansi-bold">,</span><span class="ansi-blue-intense-fg ansi-bold">&#34;variables&#34;</span><span class="ansi-yellow-intense-fg ansi-bold">,</span>name<span class="ansi-yellow-intense-fg ansi-bold">)</span><span class="ansi-yellow-intense-fg ansi-bold">,</span> <span class="ansi-blue-intense-fg ansi-bold">&#39;rb&#39;</span><span class="ansi-yellow-intense-fg ansi-bold">)</span> <span class="ansi-yellow-intense-fg ansi-bold">)</span>
-<span class="ansi-green-fg">    114</span>     <span class="ansi-green-intense-fg ansi-bold">except</span> FileNotFoundError<span class="ansi-yellow-intense-fg ansi-bold">:</span>
-
-<span class="ansi-red-intense-fg ansi-bold">FileNotFoundError</span>: [Errno 2] No such file or directory: &#39;G:\\My Drive\\projects\\qualitative analysis of literature\\post 5-12-2020\\git repository _ citation-deaths\\knowknow\\variables\\wos.ind ___ c.fy&#39;
-
-During handling of the above exception, another exception occurred:
-
-<span class="ansi-red-intense-fg ansi-bold">VariableNotFound</span>                          Traceback (most recent call last)
-<span class="ansi-green-intense-fg ansi-bold">&lt;ipython-input-2-c4d2ecd33289&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-fg">      1</span> cits_name <span class="ansi-yellow-intense-fg ansi-bold">=</span> <span class="ansi-blue-intense-fg ansi-bold">&#34;wos&#34;</span>
-<span class="ansi-green-fg">      2</span> 
-<span class="ansi-green-intense-fg ansi-bold">----&gt; 3</span><span class="ansi-yellow-intense-fg ansi-bold"> </span>cits <span class="ansi-yellow-intense-fg ansi-bold">=</span> get_cnt<span class="ansi-yellow-intense-fg ansi-bold">(</span><span class="ansi-blue-intense-fg ansi-bold">&#34;%s.ind&#34;</span><span class="ansi-yellow-intense-fg ansi-bold">%</span>cits_name<span class="ansi-yellow-intense-fg ansi-bold">,</span> <span class="ansi-yellow-intense-fg ansi-bold">[</span><span class="ansi-blue-intense-fg ansi-bold">&#39;c.fy&#39;</span><span class="ansi-yellow-intense-fg ansi-bold">,</span><span class="ansi-blue-intense-fg ansi-bold">&#39;fy&#39;</span><span class="ansi-yellow-intense-fg ansi-bold">]</span><span class="ansi-yellow-intense-fg ansi-bold">)</span>
-<span class="ansi-green-fg">      4</span> cysum <span class="ansi-yellow-intense-fg ansi-bold">=</span> load_variable<span class="ansi-yellow-intense-fg ansi-bold">(</span><span class="ansi-blue-intense-fg ansi-bold">&#34;%s.cysum&#34;</span><span class="ansi-yellow-intense-fg ansi-bold">%</span>cits_name<span class="ansi-yellow-intense-fg ansi-bold">)</span>
-
-<span class="ansi-green-intense-fg ansi-bold">G:\My Drive\projects\qualitative analysis of literature\post 5-12-2020\git repository _ citation-deaths\knowknow\__init__.py</span> in <span class="ansi-cyan-fg">get_cnt</span><span class="ansi-blue-intense-fg ansi-bold">(name, keys)</span>
-<span class="ansi-green-fg">     71</span>             varname <span class="ansi-yellow-intense-fg ansi-bold">=</span> <span class="ansi-blue-intense-fg ansi-bold">&#34;%s ___ %s&#34;</span> <span class="ansi-yellow-intense-fg ansi-bold">%</span> <span class="ansi-yellow-intense-fg ansi-bold">(</span>name<span class="ansi-yellow-intense-fg ansi-bold">,</span>k<span class="ansi-yellow-intense-fg ansi-bold">)</span>
-<span class="ansi-green-fg">     72</span> 
-<span class="ansi-green-intense-fg ansi-bold">---&gt; 73</span><span class="ansi-yellow-intense-fg ansi-bold">             </span>this_cnt <span class="ansi-yellow-intense-fg ansi-bold">=</span> defaultdict<span class="ansi-yellow-intense-fg ansi-bold">(</span>int<span class="ansi-yellow-intense-fg ansi-bold">,</span> load_variable<span class="ansi-yellow-intense-fg ansi-bold">(</span>varname<span class="ansi-yellow-intense-fg ansi-bold">)</span><span class="ansi-yellow-intense-fg ansi-bold">)</span>
-<span class="ansi-green-fg">     74</span>             cnt<span class="ansi-yellow-intense-fg ansi-bold">[</span>k<span class="ansi-yellow-intense-fg ansi-bold">]</span> <span class="ansi-yellow-intense-fg ansi-bold">=</span> this_cnt
-<span class="ansi-green-fg">     75</span>             cnt_cache<span class="ansi-yellow-intense-fg ansi-bold">[</span><span class="ansi-yellow-intense-fg ansi-bold">(</span>name<span class="ansi-yellow-intense-fg ansi-bold">,</span>k<span class="ansi-yellow-intense-fg ansi-bold">)</span><span class="ansi-yellow-intense-fg ansi-bold">]</span> <span class="ansi-yellow-intense-fg ansi-bold">=</span> this_cnt
-
-<span class="ansi-green-intense-fg ansi-bold">G:\My Drive\projects\qualitative analysis of literature\post 5-12-2020\git repository _ citation-deaths\knowknow\__init__.py</span> in <span class="ansi-cyan-fg">load_variable</span><span class="ansi-blue-intense-fg ansi-bold">(name)</span>
-<span class="ansi-green-fg">    113</span>         <span class="ansi-green-intense-fg ansi-bold">return</span> pickle<span class="ansi-yellow-intense-fg ansi-bold">.</span>load<span class="ansi-yellow-intense-fg ansi-bold">(</span> open<span class="ansi-yellow-intense-fg ansi-bold">(</span> join<span class="ansi-yellow-intense-fg ansi-bold">(</span>BASEDIR<span class="ansi-yellow-intense-fg ansi-bold">,</span><span class="ansi-blue-intense-fg ansi-bold">&#34;variables&#34;</span><span class="ansi-yellow-intense-fg ansi-bold">,</span>name<span class="ansi-yellow-intense-fg ansi-bold">)</span><span class="ansi-yellow-intense-fg ansi-bold">,</span> <span class="ansi-blue-intense-fg ansi-bold">&#39;rb&#39;</span><span class="ansi-yellow-intense-fg ansi-bold">)</span> <span class="ansi-yellow-intense-fg ansi-bold">)</span>
-<span class="ansi-green-fg">    114</span>     <span class="ansi-green-intense-fg ansi-bold">except</span> FileNotFoundError<span class="ansi-yellow-intense-fg ansi-bold">:</span>
-<span class="ansi-green-intense-fg ansi-bold">--&gt; 115</span><span class="ansi-yellow-intense-fg ansi-bold">         </span><span class="ansi-green-intense-fg ansi-bold">raise</span> VariableNotFound
-<span class="ansi-green-fg">    116</span> 
-<span class="ansi-green-fg">    117</span> <span class="ansi-green-intense-fg ansi-bold">def</span> save_variable<span class="ansi-yellow-intense-fg ansi-bold">(</span>name<span class="ansi-yellow-intense-fg ansi-bold">,</span> val<span class="ansi-yellow-intense-fg ansi-bold">)</span><span class="ansi-yellow-intense-fg ansi-bold">:</span>
-
-<span class="ansi-red-intense-fg ansi-bold">VariableNotFound</span>: </pre>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Loaded keys: dict_keys([&#39;fy.t&#39;, &#39;fy&#39;, &#39;t&#39;])
+Available keys: [&#39;a&#39;, &#39;a.c&#39;, &#39;a.fj.fy&#39;, &#39;c&#39;, &#39;c.c&#39;, &#39;c.fa&#39;, &#39;c.fj&#39;, &#39;c.fy&#39;, &#39;c.t&#39;, &#39;fa&#39;, &#39;fa.fj.fy&#39;, &#39;fj&#39;, &#39;fj.fy&#39;, &#39;fj.t&#39;, &#39;fy&#39;, &#39;fy.t&#39;, &#39;t&#39;]
+</pre>
 </div>
 </div>
 
@@ -13163,7 +13159,7 @@ During handling of the above exception, another exception occurred:
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">cc</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;total&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="n">cysum</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
@@ -13180,7 +13176,7 @@ During handling of the above exception, another exception occurred:
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># more than 5 times</span>
@@ -13191,10 +13187,28 @@ During handling of the above exception, another exception occurred:
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0.02% were cited more than 5 times
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
@@ -13213,19 +13227,54 @@ During handling of the above exception, another exception occurred:
 
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Number of citations&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Number of cited works&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;In-degree distribution&quot;</span><span class="p">)</span>
+<span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Received citations distribution (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">database_name</span><span class="p">,</span><span class="n">dtype</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
 
-<span class="n">save_figure</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.log-log citation degree distribution&quot;</span> <span class="o">%</span> <span class="n">cits_name</span><span class="p">)</span>
+<span class="n">save_figure</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>c:\users\amcga\envs\citation-deaths\lib\site-packages\ipykernel_launcher.py:3: RuntimeWarning: divide by zero encountered in log10
+  This is separate from the ipykernel package so we can avoid doing imports until
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+"
+>
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="k">as</span> <span class="nn">sm</span>
@@ -13238,7 +13287,7 @@ During handling of the above exception, another exception occurred:
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">lt</span><span class="p">,</span><span class="n">lc</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">totals</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">totals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)],</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">totals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)]</span>
@@ -13257,7 +13306,7 @@ During handling of the above exception, another exception occurred:
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">res</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
@@ -13270,10 +13319,96 @@ During handling of the above exception, another exception occurred:
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">res</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[11]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<table class="simpletable">
+<caption>OLS Regression Results</caption>
+<tr>
+  <th>Dep. Variable:</th>            <td>y</td>        <th>  R-squared:         </th> <td>   0.789</td> 
+</tr>
+<tr>
+  <th>Model:</th>                   <td>OLS</td>       <th>  Adj. R-squared:    </th> <td>   0.788</td> 
+</tr>
+<tr>
+  <th>Method:</th>             <td>Least Squares</td>  <th>  F-statistic:       </th> <td>   2149.</td> 
+</tr>
+<tr>
+  <th>Date:</th>             <td>Mon, 25 May 2020</td> <th>  Prob (F-statistic):</th> <td>1.53e-196</td>
+</tr>
+<tr>
+  <th>Time:</th>                 <td>04:57:29</td>     <th>  Log-Likelihood:    </th> <td> -458.63</td> 
+</tr>
+<tr>
+  <th>No. Observations:</th>      <td>   578</td>      <th>  AIC:               </th> <td>   921.3</td> 
+</tr>
+<tr>
+  <th>Df Residuals:</th>          <td>   576</td>      <th>  BIC:               </th> <td>   930.0</td> 
+</tr>
+<tr>
+  <th>Df Model:</th>              <td>     1</td>      <th>                     </th>     <td> </td>    
+</tr>
+<tr>
+  <th>Covariance Type:</th>      <td>nonrobust</td>    <th>                     </th>     <td> </td>    
+</tr>
+</table>
+<table class="simpletable">
+<tr>
+    <td></td>       <th>coef</th>     <th>std err</th>      <th>t</th>      <th>P>|t|</th>  <th>[0.025</th>    <th>0.975]</th>  
+</tr>
+<tr>
+  <th>const</th> <td>    6.4272</td> <td>    0.114</td> <td>   56.255</td> <td> 0.000</td> <td>    6.203</td> <td>    6.652</td>
+</tr>
+<tr>
+  <th>x1</th>    <td>   -0.9373</td> <td>    0.020</td> <td>  -46.358</td> <td> 0.000</td> <td>   -0.977</td> <td>   -0.898</td>
+</tr>
+</table>
+<table class="simpletable">
+<tr>
+  <th>Omnibus:</th>       <td>11.583</td> <th>  Durbin-Watson:     </th> <td>   1.069</td>
+</tr>
+<tr>
+  <th>Prob(Omnibus):</th> <td> 0.003</td> <th>  Jarque-Bera (JB):  </th> <td>  11.798</td>
+</tr>
+<tr>
+  <th>Skew:</th>          <td>-0.348</td> <th>  Prob(JB):          </th> <td> 0.00274</td>
+</tr>
+<tr>
+  <th>Kurtosis:</th>      <td> 3.078</td> <th>  Cond. No.          </th> <td>    29.8</td>
+</tr>
+</table><br/><br/>Warnings:<br/>[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
 </pre></div>
 
     </div>

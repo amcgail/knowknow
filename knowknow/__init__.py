@@ -1,4 +1,4 @@
-from IPython.core.display import display, HTML, Markdown
+from IPython.core.display import display, HTML, Markdown, Image
 from collections import Counter, defaultdict
 from random import sample, shuffle
 from itertools import chain
@@ -57,7 +57,7 @@ __all__ = [
     # common imports
     "Counter", "defaultdict", "Path",
     "np", "nx","sns","pd", "re",
-    "plt","display","HTML","Counter","Markdown",
+    "plt","display","HTML","Counter","Markdown","Image",
     'sample','shuffle','chain',
     'tabulate',"creader"
 ]
@@ -792,7 +792,7 @@ def header_generator(hs):
             yield h
 
 
-def save_table(name, *args, **kwargs):
+def save_table_latex(name, *args, **kwargs):
     outdir = Path(BASEDIR,"tables")
     if not outdir.exists():
         outdir.mkdir()
@@ -803,6 +803,18 @@ def save_table(name, *args, **kwargs):
     with open(outfn, 'w', encoding='utf8') as outf:
         outf.write(tab_latex)
 
+def save_table_html(html, name):
+    outdir = Path(BASEDIR,"tables")
+    if not outdir.exists():
+        outdir.mkdir()
+    outfn = str(outdir.joinpath("%s.html" % name))
+    with open(outfn, 'w', encoding='utf8') as outf:
+        outf.write(html)
+        
+def save_table(name, *args, **kwargs):
+    if 'html' in kwargs:
+        save_table_html(name, kwargs['html'])
+        
 def create_table(rows, headers, caption='', footnotes='', widths=None, columns=2):
     assert(type(headers) == list)
     if not type(headers[0]) == list:
@@ -855,9 +867,18 @@ def plot_count_series(alltop, database, myname=None,
     xlim_display=(1890,2030), xlim_data=(1900,2020),
     cols = 5,
     rows_per_group = 2,
-        count_unit='doc'):
+        count_unit='doc', label_num='max'):
     
-    cits = get_cnt("%s.%s" % (database,count_unit), [comb(ctype,'fy'),'fy'])
+    doing_both = False
+    if type(count_unit) != str:
+        if set(count_unit) == {'doc','ind'}:
+            cits = get_cnt("%s.doc" % (database), [comb(ctype,'fy'),'fy'])
+            ind = get_cnt("%s.ind" % (database), [comb(ctype,'fy'),'fy'])
+            doing_both = True
+        else:
+            raise Exception('whoopsie')
+    else:
+        cits = get_cnt("%s.%s" % (database,count_unit), [comb(ctype,'fy'),'fy'])
 
     rows = len(alltop) // cols + bool(len(alltop) % cols) # = 15 for 5
     
@@ -894,6 +915,15 @@ def plot_count_series(alltop, database, myname=None,
                 ]
 
             plt.fill_between(years,vals,color='black',alpha=0.4)
+            if doing_both:
+                v2 = np.array([ind[ comb('fy' , ctype) ][
+                        make_cross({
+                            'fy': y,
+                            ctype: name
+                        })
+                    ] for y in years])
+                v2 = max(vals) * v2 * 0.5 / np.max(v2)
+                plt.plot(years, v2, color='black')
             
             if print_names is not None:
                 title = print_names(name)
@@ -916,40 +946,34 @@ def plot_count_series(alltop, database, myname=None,
                     'black'
                 ]
 
-            # labeling the max
-                
-            maxy = max(years, key=lambda y:cits[ comb('fy',ctype) ][ make_cross({
-                    'fy': y,
-                    ctype: name
-                }) ])
-            
-            max_num = max(vals)
-            if yearly_prop:
-                max_num = "%0.1f%%"%(max_num*100)
+            # labeling the last
+            if label_num == 'last':
+                last_num = vals[-1]
 
-            if False:
-                # dynamic, angled, kind of cool but not robust
-                if maxy > 2000:
-                    lines += [
-                        (maxy-2, maxy - 10),
-                        (max(vals)*1.05, max(vals)*1.2),
-                        "black"
-                    ]
-                    plt.text(maxy - 10-4, max(vals)*1.2,max_num, fontsize=12, verticalalignment='center', horizontalalignment='right')#*3+min(vals)
-                else:
-                    lines += [
-                        (maxy+1, maxy + 10),
-                        (max(vals)*1.05, max(vals)*1.2),
-                        "black"
-                    ]
-                    plt.text(maxy + 10+4, max(vals)*1.2,max_num, fontsize=12, verticalalignment='center')#*3+min(vals)
-            else:
+                if yearly_prop:
+                    last_num = "%0.1f%%"%(last_num*100)
+
                 lines += [
                     (xlim_display[1]-10, xlim_display[1]-5),
-                    (max(vals), max(vals)),
+                    (last_num, last_num),
                     "black"
                 ]
-                plt.text(xlim_display[1]-3, max(vals), max_num, fontsize=12, verticalalignment='center', horizontalalignment='left')#*3+min(vals)
+                plt.text(xlim_display[1]-3, last_num, last_num, fontsize=12, verticalalignment='center', horizontalalignment='left')#*3+min(vals)
+                
+            elif label_num == 'max':
+                max_num = max(vals)
+
+                if yearly_prop:
+                    max_num = "%0.1f%%"%(max_num*100)
+
+                lines += [
+                    (xlim_display[1]-10, xlim_display[1]-5),
+                    (max_num, max_num),
+                    "black"
+                ]
+                plt.text(xlim_display[1]-3, max_num, max_num, fontsize=12, verticalalignment='center', horizontalalignment='left')#*3+min(vals)
+            elif label_num is not None:
+                raise Exception('don\'t recognize that label_num...')
 
             plt.plot(*lines)
             plt.scatter(
@@ -983,22 +1007,31 @@ def plot_count_series(alltop, database, myname=None,
         
         
 # print the documentation for this file, if it exists!
-def showdocs(uid):
-    md = []
+def showdocs(uid, title=""):
     
-    assert( uid in DOCS )
+    if uid not in DOCS:
+        display(Markdown("No documentation found for `%s`"%uid))
+        return
     
     d = DOCS[uid]
-    
-    md += ["# %s\n\n%s" % (d['name'],d['desc'])]
 
+    if len(title):
+        title += " "
+    
+    display(Markdown("# %s%s" % (title, d['name'])))
+    display(Markdown(d['desc']))
+    
+    if 'fn' in d:
+        # display the figures.
+        files = Path(BASEDIR, 'figures').glob("%s.png" % d['fn'])
+        for f in sorted(files,key=lambda x:x.name):
+            #print(f.name)
+            display(Image(filename=f))    
+    
     # citations
+    md = []
     if 'refs' in d and len(d['refs']):
         md += ["# References"]
         md += ["\n".join("+ %s" % z for z in d['refs'])]
-
-    if not len(md):
-        display(Markdown("No documentation found for `%s`"%uid))
-        return
     
     display(Markdown("\n\n\n\n".join(md)))
