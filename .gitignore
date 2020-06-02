@@ -1,6 +1,6 @@
-knowknow/variables/*
-knowknow/figures/*
-knowknow/tables/*
+knowknow/variables/**/*
+knowknow/figures/**/*
+knowknow/tables/**/*
 
 .ipynb_checkpoints/
 .ipynb_checkpoints/*
