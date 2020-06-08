@@ -5,8 +5,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
     
 class InstallWrapper(install):
-  """Provides a install wrapper to handle set-up of dependencies."""
-
+    """Provides a install wrapper to handle set-up of dependencies."""
     def run(self):
         install.run(self)
         self.setup_nltk()
@@ -17,7 +16,7 @@ class InstallWrapper(install):
 
 setuptools.setup(
     name="knowknow-amcgail", # Replace with your own username
-    version="0.0.1",
+    version="0.1.0",
     author="Alec McGail",
     author_email="amcgail2@gmail.com",
     description="Analyzing the evolution of ideas using citation analysis",
@@ -26,7 +25,7 @@ setuptools.setup(
     url="https://github.com/amcgail/knowknow",
     packages=setuptools.find_packages(),
     package_data={
-        "science2":["variables/*","figures/*","creating variables/*"]
+        "":["variables"]
     },
     classifiers=[
         "Programming Language :: Python :: 3",

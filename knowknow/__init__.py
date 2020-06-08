@@ -10,8 +10,8 @@ from pathlib import Path
 from os.path import dirname, join
 BASEDIR = dirname(__file__)
 
-#variable_dir = Path(BASEDIR,"variables")
-variable_dir = Path("C:\\Users\\amcga\\knowknow_variables")
+variable_dir = Path(BASEDIR,"variables")
+#variable_dir = Path("C:\\Users\\amcga\\knowknow_variables")
 
 from csv import reader as creader
 

@@ -1,2 +1,7 @@
-global-include *.ipynb
-global-include *.png
+global-include **/*.ipynb
+global-include **/*.pickle
+
+global-exclude **/.ipynb_checkpoints/*
+global-exclude **/*.png
+
+recursive-exclude knowknow/variables *
