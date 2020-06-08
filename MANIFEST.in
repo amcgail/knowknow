@@ -1,7 +1,10 @@
+recursive-include knowknow *
+
 global-include **/*.ipynb
 global-include **/*.pickle
 
 global-exclude **/.ipynb_checkpoints/*
 global-exclude **/*.png
+global-exclude **/*.ini
 
 recursive-exclude knowknow/variables *

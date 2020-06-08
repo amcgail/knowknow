@@ -1,6 +1,6 @@
 knowknow/variables/**/*
-knowknow/figures/**/*
-knowknow/tables/**/*
+../citation-death/figures/**/*
+../citation-death/tables/**/*
 
 .ipynb_checkpoints/
 .ipynb_checkpoints/*
