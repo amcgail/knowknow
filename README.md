@@ -14,8 +14,8 @@ I have included every inch of code here, leaving no stone unturned. With every `
 # Datasets built with knowknow
 
 + Sociology ([hosted on OSF](https://osf.io/9vx4y/))
-    + `sociology-wos` every paper in WoS in early 2020 whose journal is in the 'Sociology' category, and which have full data. See [the Web of Science counter for more information](/creating%20variables%5Ccounter%20-%20web%20of%20science%20(cnt).ipynb)
-    + `sociology-jstor` in-text citations and their contexts were extracted from >90k full-text Sociology articles indexed in JSTOR. See [the JSTOR counter for more information](creating%20variables%5Ccounter%20-%20jstor%20(cnt).ipynb)
+    + `sociology-wos` every paper in WoS in early 2020 whose journal is in the 'Sociology' category, and which have full data. See [the Web of Science counter for more information](knowknow/creating%20variables%5Ccounter%20-%20web%20of%20science%20(cnt).ipynb)
+    + `sociology-jstor` in-text citations and their contexts were extracted from >90k full-text Sociology articles indexed in JSTOR. See [the JSTOR counter for more information](knowknow/creating%20variables%5Ccounter%20-%20jstor%20(cnt).ipynb)
     + `sociology-wos-all`
 
 # Installation
