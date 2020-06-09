@@ -1,6 +1,22 @@
-This repository contains 
-  the code and data I used to analyze the deaths of a million citations in Sociology articles.
-The repository provides code and documentation for producing all analyses and figures in the final paper.
+This Python package, `knowknow`, is an attempt to make powerful, modern tools for analyzing the structure of knowledge open to anyone.
+Although I hope we can continue to improve the methods and documentation written here, and I intend that this grow larger than myself, this package acts as a stabilizing force for the field, giving us all access to the common methods and data for analyzing these structures.
+
+I have included every inch of code here, leaving no stone unturned. With every `pip install knowknow-amcgail`, you download the following:
+
++ `creating variables`, a collection of pre-processing algorithms for cleaning and summarizing Web of Science search results, or JSTOR Data for Research data dumps.
++ `analyses`, a set of descriptive notebooks which illustrate these datasets
++ A connector to pre-computed cooccurrence sets, hosted on [OSF](https://osf.io/9vx4y/)
+
+# Projects built on knowknow
+
++ [amcgail/citation-death](citation-death) applies the concept of 'death' to attributes of citations, and analyzes the lifecourse of cited works, cited authors, and the authors writing the citations, using the `sociology-wos` dataset.
+
+# Datasets built with knowknow
+
++ Sociology ([hosted on OSF](https://osf.io/9vx4y/))
+    + `sociology-wos` every paper in WoS in early 2020 whose journal is in the 'Sociology' category, and which have full data. See [the Web of Science counter for more information](/creating%20variables%5Ccounter%20-%20web%20of%20science%20(cnt).html)
+    + `sociology-jstor` in-text citations and their contexts were extracted from >90k full-text Sociology articles indexed in JSTOR. See [the JSTOR counter for more information](creating%20variables%5Ccounter%20-%20jstor%20(cnt).html)
+    + `sociology-wos-all`
 
 # Installation
 
