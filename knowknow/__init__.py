@@ -33,6 +33,7 @@ import numpy as np
 __all__ = [
     # constants
     "BASEDIR", "DOCS",
+    "register_notebook",
 
     # getting counts
     "get_cnt", "save_cnt", "cnt_collapse",
@@ -52,7 +53,8 @@ __all__ = [
     
     "comb", "make_cross",
     
-    "showdocs",
+    "showdocs", "display_figure",
+    "comments",
 
     # common imports
     "Counter", "defaultdict", "Path",
@@ -179,9 +181,63 @@ def cnt_collapse(c, f=lambda x:True, on=None):
 class VariableNotFound(Exception):
     pass
 
+data_files = {
+    'sociology-wos': 'https://files.osf.io/v1/resources/9vx4y/providers/osfstorage/5eded795c67d30014e1f3714/?zip='
+}
+
+
+
+def download_file(url, outfn):
+    import requests
+    url = str(url)
+    outfn = str(outfn)
+    print("Beginning download, ", url)
+    # NOTE the stream=True parameter below
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with open(outfn, 'wb') as f:
+            for i,chunk in enumerate(r.iter_content(chunk_size=8192)):
+                if i % 1000 == 0 and i:
+                    print('%0.2f MB downloaded...' % (i*8192/1e6))
+                # If you have chunk encoded response uncomment if
+                # and set chunk_size parameter to None.
+                #if chunk:
+                f.write(chunk)
+    return outfn
+
+
+
+
 def load_variable(name):
     import pickle
     from collections import defaultdict, Counter
+
+    nsp = name.split("/")
+    if len(nsp) == 1: # fallback to old ways
+        nsp = name.split(".")
+        collection = nsp[0]
+        varname = ".".join(nsp[1:])
+        name = "/".join([collection,varname])
+    elif len(nsp) == 2:
+        collection, varname = nsp
+    else:
+        raise Exception("idk how to parse this... help")
+
+    if not variable_dir.joinpath(collection).exists():
+        print("collection", collection, "does not exist...")
+        print("attempting to load from OSF")
+
+        if collection not in data_files:
+            raise Exception("no data file logged for '%s'"%collection)
+
+        zip_dest = Path(BASEDIR, "variables", "%s.zip" % collection)
+        if not zip_dest.exists():
+            download_file(data_files[collection], zip_dest)
+
+        print("Extracting...", str(zip_dest))
+        import zipfile
+        with zipfile.ZipFile(str(zip_dest), 'r') as zip_ref:
+            zip_ref.extractall(str(zip_dest.parent.joinpath(collection)))
 
     try:
         return pickle.load( variable_dir.joinpath(name).open('rb') )
@@ -189,7 +245,22 @@ def load_variable(name):
         raise VariableNotFound(name)
 
 def save_variable(name, val):
+    
+    nsp = name.split("/")
+    if len(nsp) == 1: # fallback to old ways
+        nsp = name.split(".")
+        collection = nsp[0]
+        varname = ".".join(nsp[1:])
+        name = "/".join([collection,varname])
+    elif len(nsp) == 2:
+        collection, varname = nsp
+    else:
+        raise Exception("idk how to parse this... help - e.g. sociology-wos/c.ysum")
+    
     import pickle
+    
+    variable_dir.joinpath(name).parent.mkdir(exist_ok=True)
+    
     pickle.dump( val, variable_dir.joinpath(name).open('wb') )
 
 
@@ -752,10 +823,19 @@ def citation_characterize(
     html = "\n".join(html)
     return html
 
+#NB_FNAME = None
+NB_DIR = None
+def register_notebook(fname, title):
+    global NB_FNAME, NB_DIR
+    #NB_FNAME = fname
+    NB_DIR = Path(fname)
+
 def save_figure(name):
-    outdir = Path(BASEDIR,"figures")
+    global NB_FNAME, NB_DIR
+    outdir = NB_DIR.joinpath("figures")
     if not outdir.exists():
         outdir.mkdir()
+    print("Saving to '%s'"%outdir)
     plt.savefig(str(outdir.joinpath("%s.png" % name)), bbox_inches="tight")
 
 
@@ -1035,3 +1115,54 @@ def showdocs(uid, title=""):
         md += ["\n".join("+ %s" % z for z in d['refs'])]
     
     display(Markdown("\n\n\n\n".join(md)))
+    
+    
+    
+    
+
+def display_figure(x, titles=True):
+    displayed_normally = set()
+
+    import os
+    import time
+    from datetime import datetime
+    
+    if x in DOCS:
+
+        d = DOCS[x]
+
+        if titles:
+            display(HTML("<h1 id='%s'>%s</h1>" % (x, d['name'])))
+        display(Markdown(d['desc']))
+
+        if 'refs' in d:
+            display(Markdown("\n".join("+ %s"%x for x in d['refs'])))
+
+        files = Path(NB_DIR, 'figures').glob("%s.png" % d['fn'])
+        for f in sorted(files,key=lambda x:x.name):
+            #print(f.name)
+            display(Image(filename=f))
+            displayed_normally.add(f.name)
+            
+    else:
+        
+        search = list(Path(NB_DIR, 'figures').glob(x))
+        if not len(search):
+            raise Exception("What figure!? '%s'" % x)
+        
+        for f in sorted(search):
+            if titles:
+                display(HTML("<h1>%s</h1>" % (f.name)))
+            display(Image(filename=f))
+            displayed_normally.add(f.name)
+            
+    return displayed_normally
+            
+            
+def comments():
+    html = """<script src="https://unpkg.com/commentbox.io/dist/commentBox.min.js"></script><div class="commentbox"></div><script type="module">
+    import commentBox from 'commentbox.io';commentBox('5738033810767872-proj');
+    </script>
+    """
+
+    display(HTML(html))
