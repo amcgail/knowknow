@@ -16,7 +16,7 @@ class InstallWrapper(install):
 
 setuptools.setup(
     name="knowknow-amcgail", # Replace with your own username
-    version="0.1.3",
+    version="0.1.5",
     author="Alec McGail",
     author_email="amcgail2@gmail.com",
     description="Analyzing the evolution of ideas using citation analysis",
@@ -25,8 +25,14 @@ setuptools.setup(
     url="https://github.com/amcgail/knowknow",
     packages=setuptools.find_packages(),
     package_data={
-        "":["**/*.py", "**/*.yaml", "**/*.ipynb", "writeups","external-data"],
-        "knowknow":[]
+        "knowknow":[
+            "analyses/*",
+            "creating variables/*",
+            "external-data/*",
+            "utilities/*",
+            "writeups/*",
+            "*.*"
+        ]
     },
     classifiers=[
         "Programming Language :: Python :: 3",
