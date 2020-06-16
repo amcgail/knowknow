@@ -191,6 +191,7 @@ def download_file(url, outfn):
     import requests
     url = str(url)
     outfn = str(outfn)
+    Path(outfn).parent.mkdir(exist_ok=True)
     print("Beginning download, ", url)
     # NOTE the stream=True parameter below
     with requests.get(url, stream=True) as r:
