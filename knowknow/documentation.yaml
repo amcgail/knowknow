@@ -265,11 +265,11 @@ counter:
         
         + $[fy*t]$ cited term time series
         
-        + term cooccurrence with citation and journal ($[c*t]$ and [fj*t]$)
+        + term cooccurrence with citation and journal ($[c*t]$ and $[fj*t]$)
         
         + "author" counts, the number of citations by each author ($[a]$ $[a*c]$ $[a*j*y]$)
         
-        + [c*c]$, the cooccurrence network between citations
+        + $[c*c]$, the cooccurrence network between citations
         
         + the death of citations can be studied using the $[c*fy]$ hypergraph
         

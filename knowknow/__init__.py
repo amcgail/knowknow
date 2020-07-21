@@ -185,8 +185,6 @@ data_files = {
     'sociology-wos': 'https://files.osf.io/v1/resources/9vx4y/providers/osfstorage/5eded795c67d30014e1f3714/?zip='
 }
 
-
-
 def download_file(url, outfn):
     import requests
     url = str(url)
