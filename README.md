@@ -1,3 +1,5 @@
+For the full story, see [this paper](https://osf.io/preprints/socarxiv/8tx3v/), or [these notes](http://wiki.alecmcgail.com/journal-analysis/overview).
+
 This Python package, `knowknow`, is an attempt to make powerful, modern tools for analyzing the structure of knowledge open to anyone.
 Although I hope we can continue to improve the methods and documentation written here, and I intend that this grow larger than myself, this package acts as a stabilizing force for the field, giving us all access to the common methods and data for analyzing these structures.
 
@@ -9,7 +11,7 @@ I have included every inch of code here, leaving no stone unturned. With every `
 
 # Projects built on knowknow
 
-+ [amcgail/citation-death](citation-death) applies the concept of 'death' to attributes of citations, and analyzes the lifecourse of cited works, cited authors, and the authors writing the citations, using the `sociology-wos` dataset.
++ [amcgail/citation-death](https://github.com/amcgail/citation-death) applies the concept of 'death' to attributes of citations, and analyzes the lifecourse of cited works, cited authors, and the authors writing the citations, using the `sociology-wos` dataset.
 
 # Datasets built with knowknow
 
