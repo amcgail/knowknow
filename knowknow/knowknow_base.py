@@ -5,11 +5,13 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy
 import seaborn
+import knowknow
 
 
 
 
 class Constants:
+
     DEFAULT_KEYS = ['fj.fy', 'fy']  # , 'c', 'c.fy']
     data_files = {
         'sociology-wos': 'https://files.osf.io/v1/resources/9vx4y/providers/osfstorage/'
@@ -24,6 +26,11 @@ class Constants:
 class KnowKnow:
 
     def __init__(self, NB_DIR=None, BASEDIR=None):
+        '''
+        Initailize KnowKnow class object
+        :param NB_DIR:
+        :param BASEDIR: base directory path
+        '''
         self.NB_DIR = NB_DIR
         self.BASEDIR = BASEDIR
 

@@ -7,7 +7,7 @@ Submodules
 knowknow.archive module
 -----------------------
 
-.. automodule:: archive
+.. automodule:: knowknow.archive
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ knowknow.archive module
 knowknow.knowknow\_base module
 ------------------------------
 
-.. automodule:: knowknow_base
+.. automodule:: knowknow.knowknow_base
    :members:
    :undoc-members:
    :show-inheritance:
@@ -23,7 +23,7 @@ knowknow.knowknow\_base module
 knowknow.utility module
 -----------------------
 
-.. automodule:: utility
+.. automodule:: knowknow.utility
    :members:
    :undoc-members:
    :show-inheritance:

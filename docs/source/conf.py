@@ -15,7 +15,7 @@ import sys
 import recommonmark
 from recommonmark.transform import AutoStructify
 import sphinx_rtd_theme
-sys.path.insert(0, os.path.abspath('../../knowknow/'))
+sys.path.insert(0, os.path.abspath('../..'))
 sys.setrecursionlimit(1500)
 
 
@@ -69,3 +69,17 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 master_doc = 'index'
+
+github_doc_root = "https://github.com/amcgail/knowknow/tree/develop-docs/docs"
+
+# At the bottom of conf.py
+def setup(app):
+    app.add_config_value(
+        "recommonmark_config",
+        {
+            "url_resolver": lambda url: github_doc_root + url,
+            "auto_toc_tree_section": "Contents",
+        },
+        True,
+    )
+    app.add_transform(AutoStructify)

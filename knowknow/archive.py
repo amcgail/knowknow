@@ -6,6 +6,11 @@ import numpy
 
 
 def save_figure(name):
+    '''
+    functions saves generated analysis figures to output directory
+    :param name: filename to be saved
+    :return:
+    '''
     global NB_FNAME, NB_DIR
     outdir = NB_DIR.joinpath("figures")
     if not outdir.exists():

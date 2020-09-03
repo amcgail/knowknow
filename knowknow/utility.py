@@ -24,13 +24,12 @@ def memoize(func):
 
 
 def comb(x, y):
-    """
-    TODO: figure out
+    '''
+    function to combine and sort . seprated values
     :param x: . separated values
     :param y: . separated values
-    :return: union of unique values from x and y. . separated
-    'q.w.e', 'e.r.t' -> 'e.q.r.t.w'
-    """
+    :return:  combined sorted list x+y
+    '''
     a = set(x.split("."))
     b = set(y.split("."))
 
@@ -91,12 +90,12 @@ def doit(k, keys: tuple):
 
 
 def named_tupelize(d: dict, ctype: str):
-    """
-    For each key in d, try making it a named tuple. Return {namedtuple(k, ctypes): v for k, v in dict)
-    :param d:
-    :param ctype: category types?
-    :return:
-    """
+    '''
+    For each key in dictionary d, try making it a named tuple. Return {namedtuple(k, ctypes): v for k, v in dict)
+    :param d: input dictionary
+    :param ctype: Ctype
+    :return: named tuple
+    '''
     keyss = tuple(sorted(ctype.split(".")))
     return {doit(k, keyss): v for k, v in d.items()}
 
@@ -106,6 +105,12 @@ class VariableNotFound(Exception):
 
 
 def download_file(url, outfn):
+    '''
+    Downlaod file from given url
+    :param url: url of file to be downloaded
+    :param outfn: filename of downloaded file
+    :return:
+    '''
     url = str(url)
     outfn = str(outfn)
     Path(outfn).parent.mkdir(exist_ok=True)
