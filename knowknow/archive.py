@@ -138,7 +138,7 @@ def load_variable(name):
         if collection not in data_files:
             raise Exception("no data file logged for '%s'" % collection)
 
-        zip_dest = Path(BASEDIR, "variables", "%s.zip" % collection)
+        zip_dest = Path(env.BASEDIR, "variables", "%s.zip" % collection)
         if not zip_dest.exists():
             download_file(data_files[collection], zip_dest)
 

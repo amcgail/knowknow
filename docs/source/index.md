@@ -8,8 +8,7 @@
     
    getting_started
    main_concepts
-   API reference <modules> 
-   modules
+   API reference <modules>
   
    
    Tutorials
