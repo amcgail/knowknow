@@ -3,8 +3,8 @@
 **/.ipynb_checkpoints/
 **/.ipynb_checkpoints/*
 **/desktop.ini
-**/vscode/
-**/vscode/*
+**/.vscode/
+**/.vscode/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
