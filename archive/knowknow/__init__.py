@@ -61,8 +61,12 @@ __all__ = [
     "np", "nx","sns","pd", "re",
     "plt","display","HTML","Counter","Markdown","Image",
     'sample','shuffle','chain',
-    'tabulate',"creader"
+    'tabulate',"creader",
+    'env'
 ]
+
+import env
+
 
 DEFAULT_KEYS = ['fj.fy','fy','c','c.fy']
 
@@ -131,8 +135,11 @@ class comb_cont:
         return my_named_tuple(**dict(zip(ntkeys, x)))
 
 
+cnt_metacache = {}
 cnt_cache = {}
 def get_cnt(name, keys=None):
+    if (name, frozenset(keys)) in cnt_metacache:
+        return cnt_metacache[(name, frozenset(keys))]
     
     if keys is None:
         keys = DEFAULT_KEYS
@@ -154,6 +161,7 @@ def get_cnt(name, keys=None):
 
     print("Loaded keys: %s" % cnt.keys())
     print("Available keys: %s" % avail)
+    cnt_metacache[(name, frozenset(keys))] = cnt
     return cnt
 
 def save_cnt(name, data={}):
@@ -182,8 +190,13 @@ class VariableNotFound(Exception):
     pass
 
 data_files = {
-    'sociology-wos': 'https://files.osf.io/v1/resources/9vx4y/providers/osfstorage/5eded795c67d30014e1f3714/?zip='
-}
+        'sociology-wos': 'https://files.osf.io/v1/resources/9vx4y/providers/osfstorage/'
+                         '5eded795c67d30014e1f3714/?zip=',
+        'sociology-jstor': 'https://files.osf.io/v1/resources/9vx4y/providers/osfstorage/'
+                           '5eded76fc67d3001491f27d1/?zip=',
+        'sociology-jstor-basical': 'https://files.osf.io/v1/resources/9vx4y/providers/osfstorage/'
+                                   '5eded7478b542601748b4bdb/?zip='
+    }
 
 def download_file(url, outfn):
     import requests
@@ -1165,3 +1178,128 @@ def comments():
     """
 
     display(HTML(html))
+    
+    
+    
+    
+    
+    
+
+
+
+class entity:
+    init_stack = []
+    
+    """
+    Arguments:
+        name: name of the entity in the database,
+        database: name of database you are using
+    """
+    def __init__(self, **kwargs):        
+        self.dict_filter = set(list(self.__dict__)+["dict_filter"]) # save dict keys
+        
+        for k,v in kwargs.items():
+            setattr(self,k,v)
+    
+        for name in self.init_stack:
+            getattr(self,name)()
+            
+        self.cits = self.cits()
+                
+    def dump(self):
+        to_return_keys = set(self.__dict__).difference(self.dict_filter)
+        
+        return {
+            k: getattr(self,k)
+            for k in to_return_keys
+            if k[0] != '_'
+        }
+    
+    @classmethod
+    def addinit(cls, st):
+        if st not in cls.init_stack:
+            cls.init_stack.append(st)
+
+
+# simple statistics that should be available...
+            
+entity.addinit("simple_stats")
+class entity(entity):
+    
+    
+    def simple_stats(self):
+        my_c = defaultdict(int)
+        for y in range(1850, 2040):
+            count = self.cits()[comb(self.dtype,'fy')][make_cross({
+                'fy':y,
+                self.dtype:self.name
+            })]
+            
+            if count != 0:
+                my_c[y] = count
+                
+        self._c = my_c
+        self._p =  {
+            y: count / self.cits()['fy'][(y,)]
+            for y,count in self._c.items()
+            if count > 0 and self.cits()['fy'][(y,)] > 0
+        }
+        
+        self.first = min(self._c)
+        self.last = max(self._c)
+        self.maxcounty = max(self._c, key=lambda y:(self._c[y],y))
+        self.maxpropy = max(self._p, key=lambda y:(self._p[y],y))
+
+        self.maxprop = self._p[ self.maxpropy ]
+        self.maxcount = self._c[ self.maxcounty ]
+        self.total = sum(self._c.values())
+        self.totalprop = sum(self._p.values())
+        
+        if self.dtype == 'c':
+            # extracts some extra information from the name
+            
+            self.type = 'article'
+            if database_type == 'wos':
+                sp = self.name.split("|")
+                try:
+                    self.pub = int(sp[1])
+                    self.type = 'article'
+                except ValueError:
+                    self.type = 'book'
+                    self.pub = pubyears[self.name]
+
+            elif database_type == 'jstor':
+                inparens = re.findall(r'\(([^)]+)\)', self.name)[0]
+                self.pub = int(inparens)
+    
+            
+    def sum_between(self, A, B): #not including B
+        if A > B:
+            raise Exception("Can only sum forwards in time. Fix your code...")
+        return sum( c for y,c in self._c.items() if B > y >= A )
+    
+    def yearly(self):
+        return self.first, [self._c[y] for y in range(self.first, 2020)]
+    
+    @classmethod
+    def all(cls):
+        return [name[0] for name,c in cls.cits()[cls.dtype].items() if c > 0]
+    
+    @classmethod
+    def cits(cls):
+        return get_cnt("%s.doc"%env.database, [comb(cls.dtype,'fy'),'fy',cls.dtype])
+
+            
+
+class cited_author(entity):
+    dtype = 'ta'
+    
+class citing_author(entity):
+    dtype = 'fa'
+    
+class cited_work(entity):
+    dtype = 'c'
+    
+__all__ += [
+    "entity", "cited_author","citing_author","cited_work"
+]
