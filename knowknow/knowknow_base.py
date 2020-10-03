@@ -51,7 +51,7 @@ class KnowKnow:
         avail = [x.split("___")[1].strip() for x in avail]
         return avail
 
-    def get_cnt(self, name, keys=None):
+    def get_cnt(self, name, typ, keys=None):
         # TODO: add caching
         if keys is None:
             keys = Constants.DEFAULT_KEYS
@@ -59,7 +59,7 @@ class KnowKnow:
         cnt = {}
 
         for k in keys:
-            varname = "%s ___ %s" % (name, k)
+            varname = "%s/%s ___ %s" % (name, typ, k)
 
             # print(k)
             this_cnt = defaultdict(int, knowknow.named_tupelize(dict(self.load_variable(varname)), k))
