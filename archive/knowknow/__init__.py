@@ -65,7 +65,7 @@ __all__ = [
     'env'
 ]
 
-import env
+from . import env
 
 
 DEFAULT_KEYS = ['fj.fy','fy','c','c.fy']
