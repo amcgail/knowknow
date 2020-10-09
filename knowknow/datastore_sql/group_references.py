@@ -52,6 +52,8 @@ books_grouped = string_grouper.match_strings(
     min_similarity=0.7
 )
 
+from collections import defaultdict
+
 books_grouped[(books_grouped.similarity<1-1e-8)].sort_values("similarity")
 
 # for books, we require that the authors are no more than 1 edit from each other
@@ -173,17 +175,51 @@ len(articles)
 
 from collections import defaultdict
 
+# for quicker access
+counts = {
+    x.ref: int(x['count'])
+    for i,x in dd.iterrows()
+}
+
+group_members = defaultdict(set)
+for k,v in groups.items():
+    group_members[v].add(k)
+
 def get_reps(groups):
-    ret = defaultdict(set)
-    for k,v in groups.items():
-        ret[v].add(k)
-    ret = {
-        k: max(v, key=lambda x:ysum[x]['total'])
-        for k,v in ret.items()
-    }
+
+    for k,v in group_members.items():
+        ret[k] = max(v, key=lambda x: counts[x])
+
     return ret
 
 group_reps = get_reps(groups)
+
+updated = 0
+for i, cit in enumerate(Cit.select()):
+    if cit.full_ref not in groups:
+        continue
+
+    grp = groups[cit.full_ref]
+
+    if len(group_members[grp]) < 2:
+        continue
+
+    new_name = group_reps[grp]
+
+    if new_name == cit.full_ref:
+        continue
+
+    #print('updating %s with %s' % (cit.full_ref, new_name))
+    #break
+    cit.full_ref = new_name
+    cit.author = new_name.split("|")[0]
+    cit.save()
+    updated += 1
+
+    if updated % 1000 == 0:
+        print("Updated %s citations..."%updated)
+
+database_name = 'wos'
 
 # saving the variable for later
 save_variable("%s.groups" % database_name, groups)

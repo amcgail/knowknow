@@ -1,1 +1,1 @@
-DATABASE = None
+variable_dir = 'C:/Users/amcga/GitHub/knowknow/variables'
