@@ -10,6 +10,24 @@ import requests
 from logzero import logger
 
 
+
+
+#divide by row sums
+#e/e.sum(axis=1)[:,None]
+
+def matrix_normalize(mat, axis=0):
+    if axis==0: # rows
+        return mat/mat.sum(axis=1)[:,None]
+    elif axis==1: #columns
+         return (mat.T/mat.T.sum(axis=1)[:,None]).T
+    else:
+        raise Exception('axis != 0/1')
+
+
+
+
+
+
 def memoize(func):
     cache = dict()
 

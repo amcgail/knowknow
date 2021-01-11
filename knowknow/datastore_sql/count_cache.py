@@ -4,7 +4,7 @@ import pickle
 from .. import Path, Counter, defaultdict, download_file, VariableNotFound
 
 __all__ = [
-    'Dataset','CitedRef'
+    'Dataset'
 ]
 
 """
@@ -29,11 +29,9 @@ class CitedRef:
         self.pyear = None
         if len(isplit) == 2:
             self.type = 'book'
-            self.title = isplit[1]
         else:
             self.type = 'article'
-            self.pyear = int(isplit[1])
-            self.title = isplit[2]
+            self.pyear = int(isplit[1])        
 
     def __repr__(self):
         return "< %s >" % "Cited %s: %s" % (self.type, self.full_ref)
@@ -45,13 +43,12 @@ class ent:
     cited_year = 'ty'
     cited_pub = 'c'
     citing_journal = 'fj'
-    first_citing_author = 'ffa'
 
     #@classmethod
     #def c_fn(cls, x):
     #    return CitedRef(x)
 
-    ents = 'fa,ta,fy,ty,c,fj,ffa'.split(",")
+    ents = 'fa,ta,fy,ty,c,fj'.split(",")
 
 
 
@@ -66,44 +63,7 @@ class Constants:
         'sociology-jstor-basicall': 'https://files.osf.io/v1/resources/9vx4y/providers/osfstorage/'
                                    '5eded7478b542601748b4bdb/?zip='
     }
-    data_files = {}
 
-
-save_nametuples = {}
-def make_cross(*args, **kwargs):
-    global save_nametuples
-    from collections import namedtuple
-    
-    if len(args):
-        assert(type(args[0]) == dict)
-        return make_cross(**args[0])
-    
-    keys = tuple(sorted(kwargs))
-    
-    if keys in save_nametuples:
-        my_named_tuple = save_nametuples[keys]
-    else:
-        my_named_tuple = namedtuple("_".join(keys), keys)
-        save_nametuples[keys] = my_named_tuple
-
-    return my_named_tuple(**kwargs)
-
-
-def named_tupelize(d,ctype):
-    keys = sorted(ctype.split("."))
-    
-    def doit(k):
-        if type(k) in [tuple, list]:
-            return make_cross(dict(zip(keys, k)))
-        elif len(keys) == 1:
-            return make_cross({keys[0]:k})
-        else: 
-            raise Exception("strange case...")
-    
-    return {
-        doit(k):v
-        for k,v in d.items()
-    }
 
 
 class Determ:
@@ -111,7 +71,7 @@ class Determ:
         self.dataset = dataset
         self.define = kwargs
         self.keys = sorted(self.define.keys())
-        self.cnt = Cnt.by(self.dataset, *self.keys)
+        self.cnt = Cnt(self.dataset, keys=self.keys)
 
         self._noneKeys = set(k for k,v in self.define.items() if v is None)
         self._notNoneKeys = set(k for k,v in self.define.items() if v is not None)
@@ -134,70 +94,7 @@ class Determ:
         else:
             raise Exception('Internal error; see someone who knows something...')
 
-        if len(self._noneKeys):
-            def gen():
-                for item, value in c.items():
-
-                    # this block just skips the non-representative version of C
-                    if False:
-                        if self.dataset.groups is not None and 'c' in self.define: #DELETED
-                            if item.c in self.dataset.groups:
-                                myg = self.dataset.groups[ item.c ]
-                                #print('grouping!', myg, item.c)
-                                if item.c != self.dataset.group_reps[ myg ]:
-                                    continue
-
-                    bugger = False
-                    for k in self._notNoneKeys:
-                        #if type(self.define[k]) in {list,set,range}:
-                        #    if getattr(item, k) not in self.define[k]:
-                        #        bugger=True
-                        #        break
-                        #else:
-                        if getattr(item, k) != self.define[k]:
-                            bugger=True
-                            break
-                    if bugger:
-                        continue
-
-                    ret = {
-                        k: getattr(item, k)
-                        for k in self._noneKeys
-                    }
-
-                    ret['count'] = value
-
-                    if False:
-                        # this part actually sums over the values for this item.
-                        if self.dataset.groups is not None and 'c' in self.define and item.c in self.dataset.groups: #DELETED
-                            myg = self.dataset.groups[item.c]
-
-                            to_set = [k for k,g in self.dataset.groups.items() if g == myg]
-                            #print(to_set)
-                                
-                            count = 0
-                            for ts in to_set:
-                                #print(item)
-                                item_search = item.__class__( *item )
-                                item_search = item_search._replace(c=ts)
-                                #print(item_search)
-                                count += c[ item_search ]
-                                #print(item_search, count)
-
-                            ret['count'] = count
-
-                    else:
-                        ret['count'] = value
-
-                    yield ret
-
-            dd = pd.DataFrame(list(gen()))
-            dd = dd.sort_values(sorted(self._noneKeys))
-            return dd
-
-        else:
-
-            return c[ make_cross(**self.define) ]
+        # create the thingies...
 
     @property
     def docs(self):
@@ -431,10 +328,6 @@ class Dataset:
         except FileNotFoundError:
             raise VariableNotFound((self.name,name))
 
-    def clear_all(self):
-        # remove the files
-        for f in Path(env.variable_dir).joinpath(self.name).glob("*"):
-            f.unlink()
 
     def save_variable(self, name, val):
         import pickle
@@ -469,9 +362,7 @@ class Dataset:
         
     def by(self, *args):
         return Cnt.by(self, *args) # passes this dataset as the first argument
-
-
-
+        
 
 
 
@@ -489,7 +380,6 @@ class Cnt:
         self._docs = None
         self._cits = None
 
-
     @classmethod
     def by(cls, dataset, *keys):
         if not len(keys):
@@ -499,13 +389,11 @@ class Cnt:
             
         keys = list(keys)
 
-        myk = (dataset.name, frozenset(keys))
-
-        if myk not in cls.cache:
+        if frozenset(keys) not in cls.cache:
             ret = Cnt(dataset, keys)
-            cls.cache[myk] = ret
+            cls.cache[frozenset(keys)] = ret
 
-        return cls.cache[myk]
+        return cls.cache[frozenset(keys)]
         
     def load_counts(self, varname, k):
     

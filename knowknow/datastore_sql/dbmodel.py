@@ -1,8 +1,7 @@
 from peewee import *
+from .. import env
 
-from pathlib import Path
-
-db = SqliteDatabase( Path(__file__).parent.joinpath( '../..', 'wos.db') )
+db = SqliteDatabase( env.variable_dir.joinpath('wos.db') )
 #db = PostgresqlDatabase('wos', user='postgres', password='postgres',
 #                           host='0.0.0.0', port=5432)
 
