@@ -8,6 +8,7 @@ import re
 
 from pathlib import Path
 from os.path import dirname, join
+import yaml
 
 BASEDIR = dirname(__file__)
 
@@ -38,3 +39,6 @@ from . import viz
 
 # from .knowknow_base import  *
 # from .archive import *
+
+if __name__ == '__main__':
+    print("MAINING!")
