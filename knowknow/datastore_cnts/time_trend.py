@@ -1,6 +1,7 @@
 from .. import *
 from .count_cache import Dataset, make_cross
 from ..exceptions import invalid_entry
+from . import stats
 
 
 __all__ = [
@@ -259,7 +260,9 @@ class TimeTrend:
             elif self.dataset['type'] == 'jstor':
                 inparens = re.findall(r'\(([^)]+)\)', self.name)[0]
                 self.pub = int(inparens)
-    
+
+    def avg_between(self, A, B): #not including B
+        return self.sum_between(A, B) / (B-A)
             
     def sum_between(self, A, B): #not including B
         if self._cumsum is None:
@@ -286,3 +289,15 @@ class TimeTrend:
             return self._cumsum[B - self.data_start]
         else:
             return self._cumsum[B - self.data_start] - self._cumsum[(A - 1) - self.data_start]
+
+
+    def births_deaths(self, **kwargs):
+        """
+        def births_deaths(tt,  # the trend this should be calculated on
+                          birth_cutoff=0.5,  # relative to the last life
+                          death_cutoff=0.1,  # relative to this life so far
+                          forward_view=10,  # years to look forward for comparison
+                          backward_view=5  # minimum years to look back for comparison
+                          ):
+        """
+        return stats.births_deaths(self, **kwargs)

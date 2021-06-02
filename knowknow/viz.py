@@ -1,8 +1,23 @@
-from . import plt, Path, np, Dataset, env
+from . import *
 
 __all__ = [
-    'yearly_counts','matrix'
+    'yearly_counts_grid','matrix','key2name','yearly_counts_table',
+    'author_pub_table'
 ]
+
+def key2name(tname, truncate=None):
+    tstr = tname.split("|")
+    if len(tstr) == 3:
+        tstr = "%s (%s)" % (tstr[0], tstr[1])
+    else:
+        tstr = "%s %s" % (tstr[0], tstr[1])
+    tstr = tstr.title()
+
+    if truncate is not None:
+        if tstr[:truncate] != tstr:
+            tstr = tstr[:truncate] + "..."
+
+    return tstr
 
 def _normalize(mat, axis=0):
     if axis==0: # rows
@@ -137,7 +152,7 @@ def matrix(db, typ='docs', plot=False, norm=None, trans=False, includeComplement
     else:
         return mat
 
-def yearly_counts(names, dataset, myname=None, 
+def yearly_counts_grid(names, dataset, myname=None,
     overwrite=True, 
     markers={}, print_names=None, 
     ctype='c', yearly_prop=False, 
@@ -321,3 +336,181 @@ def yearly_counts(names, dataset, myname=None,
 
         dataset.save_figure(myFnName)
         plt.show();
+
+
+
+def yearly_counts_table_simp(
+        dta, who,
+        NCOLS=2, NPAGES=None,
+        markranges={}, yearlim=(1950,2015),
+        tickstep=20,
+        print_names={}, number_start=1,
+        print_numbers = False):
+
+    wper = 16 / 3
+    hper = 14 / 20
+    NROWS = (len(who) // NCOLS) + int(len(who) % NCOLS != 0)
+
+    # top_end = (2080-2015) /  (2015-1950)
+    # bottom_end = (1950 - 1880) / (2015 - 1950)
+    # year_wid = yearlim[1] - yearlim[0]
+    yearmin, yearmax = yearlim
+
+    # xmin, xmax = (yearlim[0] - bottom_end * year_wid, yearlim[1] + top_end * year_wid)
+    # def dist_trans(nyears):
+    #    return year_wid * nyears / (2015-1950)
+
+    plt.figure(figsize=(wper * NCOLS, hper * NROWS))
+
+    for col_i in range(NCOLS):
+
+        plt.subplot(1, NCOLS, col_i + 1)
+
+        trends = []
+        for i, tname in enumerate(who[col_i * NROWS: (col_i + 1) * NROWS]):
+            tt = np.array(dta.trend('c', tname).cits(yearmin, yearmax))
+
+            # print(yearmin,yearmax)
+            trends.append((tname, tt))
+
+        for i, (tname, tt) in enumerate(trends):
+            ttm = tt.max()
+            ttl = tt[-1]
+            ttl15 = tt[-15:].mean()
+
+            BASE = (NROWS - 1 - i) * 2
+
+            tt = tt / ttm
+            tt = tt + BASE
+
+            years = range(yearmin, yearmax + 1)
+
+            plt.axis('off')
+            plt.fill_between(years, tt, y2=BASE, color='gray')
+
+            if tname in print_names:
+                tstr = print_names[tname]
+            else:
+                tstr = key2name(tname, truncate=25)
+
+            tstr = "(%s) " % ((col_i) * NROWS + i + number_start) * print_numbers + tstr
+            plt.text(2020, BASE, tstr, fontsize=13)
+            # plt.text(yearmax + dist_trans(2030-2015), BASE, int(ttm), horizontalalignment='center')
+            # plt.text(yearmax + dist_trans(2050-2015), BASE, int(ttl), horizontalalignment='center')
+            # plt.text(yearmax + dist_trans(2070-2015), BASE, "%0.1f" % ttl15, horizontalalignment='center')
+            # plt.text(2025, i*2, int(ttm), horizontalalignment='center')
+
+            if tname in markranges:
+                # xmin,xmax = plt.xlim()
+                ymin, ymax = [BASE, BASE + 1.4]
+                mk = markranges[tname]
+                plt.fill_between(mk, [ymin, ymin], [ymax, ymax], color='blue', alpha=0.2)
+
+        plt.vlines(range(yearmin, yearmax, tickstep), 0, NROWS * 2, color='black', alpha=0.3)
+
+        # table lines...
+        # plt.vlines([ yearmax + dist_trans(DD-2015) for DD in range(2020, 2080 + 20, 20)], 0, NROWS * 2, color='black', alpha=1)  # table lines
+
+        for y in range(yearmin, yearmax, tickstep):
+            plt.text(y, -1, y, horizontalalignment='center')
+
+        plt.xlim(yearmin, yearmax + 50)
+
+
+def yearly_counts_table(
+        dta, who,
+        NCOLS=2, NPAGES=None,
+        markranges={}, yearlim=(1950,2015),
+        tickstep=20,
+        print_names={}, number_start=1
+):
+    if NPAGES is not None:
+        nper = len(who) // NPAGES + int( len(who) % NPAGES != 0 )
+        for i in range(NPAGES):
+            yearly_counts_table(
+                dta,
+                who[i*nper:(i+1)*nper],
+                NCOLS,None,
+                markranges,
+                yearlim,
+                tickstep,
+                print_names=print_names, number_start=number_start
+            )
+        return
+
+    #print(yearlim)
+
+    wper = 17 / 3
+    hper = 10 / 20
+    NROWS = (len(who) // NCOLS) + int(len(who) % NCOLS != 0)
+
+    top_end = (2080-2015) /  (2015-1950)
+    bottom_end = (1950 - 1850) / (2015 - 1950)
+    year_wid = yearlim[1] - yearlim[0]
+    yearmin, yearmax = yearlim
+
+    xmin, xmax = (yearlim[0] - bottom_end * year_wid, yearlim[1] + top_end * year_wid)
+    def dist_trans(nyears):
+        return year_wid * nyears / (2015-1950)
+
+
+    plt.figure(figsize=(wper * NCOLS, hper * NROWS))
+
+    for col_i in range(NCOLS):
+
+        plt.subplot(1, NCOLS, col_i + 1)
+
+        trends = []
+        for i, tname in enumerate(who[col_i * NROWS: (col_i + 1) * NROWS]):
+            tt = np.array(dta.trend('c', tname).cits(yearmin, yearmax))
+
+            #print(yearmin,yearmax)
+            trends.append((tname, tt))
+
+        for i, (tname, tt) in enumerate(trends):
+            ttm = tt.max()
+            ttl = tt[-1]
+            ttl15 = tt[-15:].mean()
+
+            BASE = (NROWS - 1 - i) * 2
+
+            tt = tt / ttm
+            tt = tt + BASE
+
+            years = range(yearmin, yearmax+1)
+
+            plt.axis('off')
+            plt.fill_between(years, tt, y2=BASE, color='gray')
+
+            if tname in print_names:
+                tstr = print_names[tname]
+            else:
+                tstr = key2name(tname, truncate=25)
+
+            tstr = "(%s) %s" % ((col_i) * NROWS + i + number_start, tstr)
+            plt.text(yearmin - dist_trans(1950-1820), BASE, tstr)
+            plt.text(yearmax + dist_trans(2030-2015), BASE, int(ttm), horizontalalignment='center')
+            plt.text(yearmax + dist_trans(2050-2015), BASE, int(ttl), horizontalalignment='center')
+            plt.text(yearmax + dist_trans(2070-2015), BASE, "%0.1f" % ttl15, horizontalalignment='center')
+            # plt.text(2025, i*2, int(ttm), horizontalalignment='center')
+
+            if tname in markranges:
+                #xmin,xmax = plt.xlim()
+                ymin,ymax = [BASE,BASE+1.4]
+                mk = markranges[tname]
+                plt.fill_between( mk, [ymin,ymin], [ymax,ymax], color='blue', alpha=0.2 )
+
+        plt.vlines(range(yearmin, yearmax, tickstep), 0, NROWS * 2, color='black', alpha=0.3)
+
+        # table lines...
+        plt.vlines([ yearmax + dist_trans(DD-2015) for DD in range(2020, 2080 + 20, 20)], 0, NROWS * 2, color='black', alpha=1)  # table lines
+
+        for y in range(yearmin, yearmax, tickstep):
+            plt.text(y, -1, y, horizontalalignment='center')
+
+        plt.xlim(xmin, xmax)
+
+    # plt.savefig("top_cited.png", dpi=300)
+
+def author_pub_table(dta, who, **kwargs):
+    yearly_counts_table(dta, dta.search('c', who + "|"), **kwargs)

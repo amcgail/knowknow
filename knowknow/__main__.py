@@ -18,29 +18,35 @@ if __name__ == '__main__':
         home = expanduser("~")
         default = Path(home).joinpath("knowknow")
 
-        while 1:
-            chosen_dir = input("Enter the directory where knowknow will keep data and code (will be created if doesn't exist) <default: %s> : " % default) or str(default)
-            chosen_dir = Path(chosen_dir)
-            if not chosen_dir.parent.exists():
-                ans = None
-                while ans not in "ynYN":
-                    ans = input("The parent of this directory does not exist. Continue (y/n)?")
-                if ans in "nN":
-                    continue
+        if 'kkdir' not in GLOBS:
+            while 1:
+                chosen_dir = input("Enter the directory where knowknow will keep data and code (will be created if doesn't exist) <default: %s> : " % default) or str(default)
+                chosen_dir = Path(chosen_dir)
+                if not chosen_dir.parent.exists():
+                    ans = None
+                    while ans not in "ynYN":
+                        ans = input("The parent of this directory does not exist. Continue (y/n)?")
+                    if ans in "nN":
+                        continue
 
-            GLOBS['kkdir'] = str(chosen_dir)
+                GLOBS['kkdir'] = str(chosen_dir)
 
-            with cfile.open('w') as f:
-                yaml.dump(GLOBS, f)
+                with cfile.open('w') as f:
+                    yaml.dump(GLOBS, f)
 
-            if not chosen_dir.exists():
-                print("Creating directory.")
-                chosen_dir.mkdir(parents=True)
-            else:
-                print("This directory exists.")
-            break
+                if not chosen_dir.exists():
+                    print("Creating directory.")
+                    chosen_dir.mkdir(parents=True)
+                else:
+                    #print("This directory exists.")
+                    pass
 
-        print("Dataset directory updated")
+                print("Dataset directory updated")
+                break
+
+        dir_create = Path(GLOBS['kkdir']).joinpath('code',args[1])
+        print("Creating directory '%s'" % dir_create)
+        dir_create.mkdir(exist_ok=True, parents=True)
 
     elif args[0] == 'clone':
 
