@@ -3,3 +3,4 @@ knowknow_amcgail.egg-info/**/*
 **/.*/**/*
 dist/**/*
 build/**/*
+.vscode/*
