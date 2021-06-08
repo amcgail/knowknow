@@ -33,10 +33,12 @@ from .utility import *
 # this uses some imports from here...
 from .datastore_cnts import *
 # from .datastore_sql import *
-from .code_sharing import *
-from . import viz
-# from .meta_notebook import *
 
+from .code_sharing import *
+from . import dataverse
+from . import viz
+
+# from .meta_notebook import *
 # from .knowknow_base import  *
 # from .archive import *
 
