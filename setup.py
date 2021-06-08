@@ -16,7 +16,7 @@ class InstallWrapper(install):
 
 setuptools.setup(
     name="knowknow-amcgail", # Replace with your own username
-    version="0.2.22",
+    version="0.3.0",
     author="Alec McGail",
     author_email="amcgail2@gmail.com",
     description="Analyzing the evolution of ideas using citation analysis",
