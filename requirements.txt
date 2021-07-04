@@ -10,10 +10,10 @@ logzero==1.5.0
 lxml==4.6.3
 matplotlib==3.2.1
 nameparser==1.0.6
-networkx==2.3
-nltk==3.5
-numpy==1.18.4
-pandas==1.0.3
+networkx>=2.3
+nltk>=3.5
+numpy>=1.18.4
+pandas>=1.0.3
 papermill==2.1.1
 peewee==3.13.3
 PyYAML==5.4
