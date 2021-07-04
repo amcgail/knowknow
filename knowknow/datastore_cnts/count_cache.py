@@ -313,7 +313,7 @@ class Dataset:
 
         assert(type(name) == str)
 
-        return [x for x in self.items(dtype) if name.lower() in x.lower()]
+        return [x for x in self.items(dtype) if name.lower() in x.lower() and x.lower().index(name.lower())==0]
 
 
 
@@ -395,6 +395,20 @@ class Dataset:
             name = name,
             dataset=self
         )
+
+    def upload(self, api_key, 
+        dataset_description="", 
+        dataverse_name = 'kk-citation-counts',
+        dataverse_server = 'https://dataverse.harvard.edu'):
+
+        from ..dataverse import upload
+
+        return upload( 
+            api_key, 
+            self.name,
+            dataset_description=dataset_description, 
+            dataverse_name=dataverse_name,
+            dataverse_server=dataverse_server)
         
     def variables(self):
         avail = Path(env.variable_dir).joinpath(self.name).glob("*")
