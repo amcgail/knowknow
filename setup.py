@@ -16,7 +16,7 @@ class InstallWrapper(install):
 
 setuptools.setup(
     name="knowknow-amcgail", # Replace with your own username
-    version="0.2.22",
+    version="0.2.24",
     author="Alec McGail",
     author_email="amcgail2@gmail.com",
     description="Analyzing the evolution of ideas using citation analysis",
@@ -46,6 +46,7 @@ setuptools.setup(
         "editdistance>=0.5.3",
         "ipython>=7.14.0",
         "jupyter>=1.0.0",
+        "IPython",
         "jupyterlab>=2.1.2",
         "lxml>=4.4.1",
         "matplotlib>=3.2.1",
@@ -59,7 +60,6 @@ setuptools.setup(
         "scipy>=1.4.1",
         "seaborn>=0.10.1",
         "six>=1.14.0",
-        "sklearn>=0.0",
         "statsmodels>=0.11.1",
         "string-grouper>=0.1.0",
         "tabulate>=0.8.7",
