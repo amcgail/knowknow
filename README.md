@@ -38,11 +38,17 @@ I have included every inch of code here, leaving no stone unturned. With every `
     + On Windows, I needed to install the latest versions of `numpy` and `scipy` via .whl
     + Download from [this site](https://www.lfd.uci.edu/~gohlke/pythonlibs/), install with `pip install <fn.whl>`
 
-# Quick start
+# Meta-commands
 
-The following command starts jupyterlab in the base directory of this repository. This is a good place to start.
+To get started with knowknow, you need to 1) download data, 2) either create a new project or copy an existing one, and 3) start a JupyterLab environment. The following commands will help you perform these actions, getting you started conducting or reproducing analyses using `knowknow`.
 
-`python -m science2 start`
+`python -m knowknow init`. Run this command first. It will prompt you for the directory to store data files and the directory where code will be stored.
+
+`python -m knowknow clone <URL>`. Clone someone else's repository. For instance, `python -m knowknow clone https://github.com/amcgail/citation-death`.
+
+`python -m knowknow start <REPO-NAME>`. Start a JupyterLab notebook in a repository. For example, python -m knowknow start citation-death`.
+
+Data files will be automatically downloaded during code execution, if they are not alredy in the directory you specified with the `init` command.
 
 # Developing
 
@@ -50,27 +56,14 @@ If you want to contribute edits of your own, fork this repository into your own 
 
 There is a lot to do! If you find this useful to your work, and would like to contribute (even to the following list of possible next steps) but can't figure out how, please don't hesitate to reach out. My website is [here](http://www.alecmcgail.com), [Twitter here](https://twitter.com/SomeKindOfAlec). 
 
-## Aimed completion by 5/22/2020 (ben rosche)
-
-+ analyses complete, with explanations, annotations, and graphs
-
-## Aimed completion by 5/29/2020 (committee)
-
-+ literature review is tight, written, boom. everything down. finish it.
-
-## Aimed completion by 6/5/2020 (presentation)
-
-+ Externalizing data from the Git repository, so it can be dynamically downloaded / uploaded via AWS
-+ trimming the paper and preparing it for publication
-
 ## Possible projects
 
 + The documentation for this project can always be improved. This is typically through people reaching out to me when they have issues. Please [feel free](https://twitter.com/SomeKindOfAlec).
-+ An object-oriented model for handling context would prevent the need for so much variable-passing between functions, reduce total code volume, and improve readability.
-+ Different datasets and sources could be incorporated, if you have the need, in addition to JSTOR and WoS.
-+ If you produce precomputed binaries and have an idea of how we could incorporate the sharing of these binaries within this library, please [DM me](https://twitter.com/SomeKindOfAlec) or something. That would be great.
-+ All analyses can be generalized to any counted variable of the citations. This wouldn't be tough, and would have a huge payout.
-+ It would be amazing if we could make a graphical interface for this.
++ **complete** An object-oriented model for handling context would prevent the need for so much variable-passing between functions, reduce total code volume, and improve readability.
++ *ongoing* Different datasets and sources could be incorporated, if you have the need, in addition to JSTOR and WoS.
++ **complete - you can now upload data files to Harvard's Dataverse** If you produce precomputed binaries and have an idea of how we could incorporate the sharing of these binaries within this library, please [DM me](https://twitter.com/SomeKindOfAlec) or something. That would be great.
++ *ongoing, future work* All analyses can be generalized to any counted variable of the citations. This wouldn't be tough, and would have a huge payout.
++ *huge project, uncertain payout* It would be amazing if we could make a graphical interface for this.
     + user simply imports data, chooses the analyses they want to run, fill in configuration parameters and press "go"
     + the output is a PDF with the code, visualizations, and explanations for a given analysis
     + behind the scenes, all this GUI does is run `nbconvert` 
