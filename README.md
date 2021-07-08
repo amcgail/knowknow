@@ -23,11 +23,20 @@ I have included every inch of code here, leaving no stone unturned. With every `
     + `sociology-jstor` in-text citations and their contexts were extracted from >90k full-text Sociology articles indexed in JSTOR. See [the JSTOR counter for more information](knowknow/creating%20variables/counter%20-%20jstor%20(cnt).ipynb)
     + `sociology-wos-all`
 
-# Installation
+# Installation (package)
 
 1. Install Python 3.7
 2. Install [Build Tools for Visual Studio](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-3. Run `pip install science2-amcgail`
+3. Run `pip install knowknow-amcgail`
+
+# Installation (GitHub)
+
+1. Install Python 3.7+
+2. Clone the repository to your computer
+3. Create a virtualenv for `knowknow`
+4. In the virtualenv, execute `pip install -r requirements`
+    + On Windows, I needed to install the latest versions of `numpy` and `scipy` via .whl
+    + Download from [this site](https://www.lfd.uci.edu/~gohlke/pythonlibs/), install with `pip install <fn.whl>`
 
 # Quick start
 
