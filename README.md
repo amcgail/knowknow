@@ -1,7 +1,5 @@
 This Python package, `knowknow`, is an attempt to make powerful, modern tools for analyzing the structure of knowledge open to anyone.
-Although I hope we can continue to improve the methods and documentation written here, and I intend that this grow larger than myself, this package acts as a stabilizing force for the field, giving us all access to the common methods and data for analyzing these structures.
-I also recognize that parallel efforts exist along these lines, including CADRE, and will work to port what I have made here to that platform.
-This package is still the only resource for `anyone` to analyze Web of Science datasets.
+I recognize that parallel efforts exist along these lines, including [CADRE](https://cadre.iu.edu/), but this package is still the only resource for *anyone* to analyze Web of Science datasets, and the methods can be incorporated into CADRE by *anyone*.
 
 <!--
 I have included every inch of code here, leaving no stone unturned. With every `pip install knowknow-amcgail`, you download the following:
