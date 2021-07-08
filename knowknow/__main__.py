@@ -16,11 +16,18 @@ if __name__ == '__main__':
         import yaml
         from os.path import expanduser
         home = expanduser("~")
-        default = Path(home).joinpath("knowknow")
+        
+        
 
-        if 'kkdir' not in GLOBS:
+        def dir_for( name, GLOB_KEY, default_name ):
+
+            default = Path(home).joinpath("knowknow", default_name)
+
+            if GLOB_KEY in GLOBS:
+                default = Path(GLOBS[GLOB_KEY])
+
             while 1:
-                chosen_dir = input("Enter the directory where knowknow will keep data and code (will be created if doesn't exist) <default: %s> : " % default) or str(default)
+                chosen_dir = input(f"Enter the directory where knowknow will keep {name} <default: {default}> : ") or str(default)
                 chosen_dir = Path(chosen_dir)
                 if not chosen_dir.parent.exists():
                     ans = None
@@ -29,11 +36,7 @@ if __name__ == '__main__':
                     if ans in "nN":
                         continue
 
-                GLOBS['kkdir'] = str(chosen_dir)
-
-                with cfile.open('w') as f:
-                    yaml.dump(GLOBS, f)
-
+                # create directory if not exists...
                 if not chosen_dir.exists():
                     print("Creating directory.")
                     chosen_dir.mkdir(parents=True)
@@ -41,20 +44,25 @@ if __name__ == '__main__':
                     #print("This directory exists.")
                     pass
 
-                print("Dataset directory updated")
+                # make the update
+                GLOBS[GLOB_KEY] = str(chosen_dir)
+                
+                with cfile.open('w') as f:
+                    yaml.dump(GLOBS, f)
+
+                print(f"Dataset directory updated: {GLOB_KEY} = {str(chosen_dir)}")
                 break
 
-        dir_create = Path(GLOBS['kkdir']).joinpath('code',args[1])
-        print("Creating directory '%s'" % dir_create)
-        dir_create.mkdir(exist_ok=True, parents=True)
+
+        dir_for( 'data', 'kk_data_dir', 'data' )
+        dir_for( 'code', 'kk_code_dir', 'code' )
 
     elif args[0] == 'clone':
 
         if len(args) != 2:
             raise Exception('`clone` command takes exactly 1 argument')
 
-
-        if 'kkdir' not in GLOBS:
+        if 'kk_code_dir' not in GLOBS:
             raise Exception('You need to call `python -m knowknow init` first...')
 
         _, name = args
@@ -70,14 +78,17 @@ if __name__ == '__main__':
         print("Cloning '%s' into '<kk>/code/%s' ..." % (name, short_name))
 
         from git.repo.base import Repo
-        fld = Path(GLOBS['kkdir'], 'code')
+        fld = Path(GLOBS['kk_code_dir'])
         if not fld.exists():
             fld.mkdir()
         Repo.clone_from(name, fld.joinpath(short_name))
 
     elif args[0] == 'start':
+        if 'kk_code_dir' not in GLOBS:
+            raise Exception('You need to call `python -m knowknow init` first...')
+
         if len(args) != 2:
-            fs = list(Path(GLOBS['kkdir'], 'code').glob("*"))
+            fs = list(Path(GLOBS['kk_code_dir']).glob("*"))
             if not len(fs):
                 poss_args = "No code has been loaded, so there aren't valid commands. Either run `init` or `clone` to create/copy some data."
             else:
@@ -87,7 +98,7 @@ if __name__ == '__main__':
         where = args[1]
         where = where.split("/")[-1]
 
-        dr = Path(GLOBS['kkdir'], 'code', where)
+        dr = Path(GLOBS['kk_code_dir'], where)
 
         import os
         os.chdir(dr)

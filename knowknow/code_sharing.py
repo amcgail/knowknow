@@ -25,7 +25,7 @@ def require(where, what):
     else:
         who, name = wsp
 
-    dest_fn = Path(GLOBS['kkdir'], 'code', name)
+    dest_fn = Path(GLOBS['kk_code_dir'], name)
 
     if not dest_fn.exists():
         print("Module doesn't exist. Attempting to load it...")
@@ -40,7 +40,7 @@ def require(where, what):
         print("Cloning '%s' into '<kk>/code/%s' ..." % (name, short_name))
 
         from git.repo.base import Repo
-        fld = Path(GLOBS['kkdir'], 'code')
+        fld = Path(GLOBS['kk_code_dir'])
         if not fld.exists():
             fld.mkdir()
         Repo.clone_from(url, fld.joinpath(short_name))
