@@ -16,10 +16,9 @@ I have included every inch of code here, leaving no stone unturned. With every `
 
 # Datasets built with knowknow
 
-+ Sociology ([hosted on Harvard Dataverse]())
-    + `sociology-wos` every paper in WoS in early 2020 whose journal is in the 'Sociology' category, and which have full data. See [the Web of Science counter for more information](knowknow/creating%20variables/counter%20-%20web%20of%20science%20(cnt).ipynb)
-    + `sociology-jstor` in-text citations and their contexts were extracted from >90k full-text Sociology articles indexed in JSTOR. See [the JSTOR counter for more information](knowknow/creating%20variables/counter%20-%20jstor%20(cnt).ipynb)
-    + `sociology-wos-all`
++ Sociology
+    + `sociology-wos` ([Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/GQGJLQ)) every paper in WoS in early 2020 whose journal is in the 'Sociology' category, and which have full data. 
+    + *in progress* `sociology-jstor` in-text citations and their contexts were extracted from >90k full-text Sociology articles indexed in JSTOR. 
 
 # Installation (package)
 
@@ -30,11 +29,11 @@ I have included every inch of code here, leaving no stone unturned. With every `
 # Installation (GitHub)
 
 1. Install Python 3.7+
-2. Clone the repository to your computer
+2. Clone this repository to your computer
 3. Create a virtualenv for `knowknow`
 4. In the virtualenv, execute `pip install -r requirements`
-    + On Windows, I needed to install the latest versions of `numpy` and `scipy` via .whl
-    + Download from [this site](https://www.lfd.uci.edu/~gohlke/pythonlibs/), install with `pip install <fn.whl>`
+    + On Windows, I needed to install the latest versions of `numpy`, `scikit-learn` and `scipy` via .whl
+    + For Windows, download from [this site](https://www.lfd.uci.edu/~gohlke/pythonlibs/), install with `pip install <fn.whl>`
 
 # Meta-commands
 
