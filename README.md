@@ -37,15 +37,30 @@ I have included every inch of code here, leaving no stone unturned. With every `
 
 # Meta-commands
 
-To get started with knowknow, you need to 1) download data, 2) either create a new project or copy an existing one, and 3) start a JupyterLab environment. The following commands will help you perform these actions, getting you started conducting or reproducing analyses using `knowknow`.
+To get started with knowknow, you need to 
+    1) specify where knowknow should store data and code ("init") 
+    2) either create a new project or copy an existing one, and 
+    3) start a JupyterLab environment. 
 
-`python -m knowknow init`. Run this command first. It will prompt you for the directory to store data files and the directory where code will be stored.
+The following commands will help you perform these actions, getting you started conducting or reproducing analyses using `knowknow`.
 
-`python -m knowknow clone <URL>`. Clone someone else's repository. For instance, `python -m knowknow clone https://github.com/amcgail/citation-death`.
+`python -m knowknow init`. 
+    Run this command first. 
+    It will prompt you for the directory to store data files and the directory where code will be stored.
 
-`python -m knowknow start <REPO-NAME>`. Start a JupyterLab notebook in a repository. For example, python -m knowknow start citation-death`.
+`python -m knowknow clone <URL>`
+    For instance, `python -m knowknow clone https://github.com/amcgail/lost-forgotten`.
+    Clone someone else's repository. 
 
-Data files will be automatically downloaded during code execution, if they are not alredy in the directory you specified with the `init` command.
+`python -m knowknow start <REPO-NAME>`
+    For instance, `python -m knowknow start citation-death`. 
+    Start a JupyterLab notebook in a repository. 
+    If the repository
+
+Note: 
+Data files will be automatically downloaded during code execution, if they are not alredy in the *data* directory you specified with the `init` command. This may take up significant bandwidth -- the data files for the Sociology dataset are ~750MB.
+
+Code specified by the `knowknow.reqiure` function will be automatically downloaded by knowknow into the *code* directory you specified with the `init` command. **Be sure you trust whoever wrote the code you download.** Running arbitrary code from random strangers on your computer is a security risk.
 
 # Developing
 
