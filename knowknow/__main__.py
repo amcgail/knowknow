@@ -13,14 +13,24 @@ The following commands will help you perform these actions, getting you started 
     Run this command first. 
     It will prompt you for the directory to store data files and the directory where code will be stored.
 
-`python -m knowknow clone <URL>`
-    For instance, `python -m knowknow clone https://github.com/amcgail/lost-forgotten`.
-    Clone someone else's repository. 
-
 `python -m knowknow start <REPO-NAME>`
     For instance, `python -m knowknow start citation-death`. 
     Start a JupyterLab notebook in a repository. 
     If the repository does not exist, a new folder will be created with a git repository.
+
+`python -m knowknow clone <URL>`
+    For instance, `python -m knowknow clone https://github.com/amcgail/lost-forgotten`.
+    Clone someone else's repository. 
+
+Note: 
+
+Data files will be automatically downloaded during code execution, if they are not alredy in the *data* directory you specified with the `init` command. This may take up significant bandwidth -- the data files for the Sociology dataset are ~750MB.
+
+Code specified by the `knowknow.reqiure` function will be automatically downloaded by knowknow into the *code* directory you specified with the `init` command. **Be sure you trust whoever wrote the code you download.** Running arbitrary code from random strangers on your computer is a security risk.
+"""
+
+"""
+# THE FOLLOWING HAS BEEN DESTROYED -- USE GITHUB DESKTOP
 
 `python -m knowknow push <REPO-NAME> <git args>`
     For instance, `python -m knowknow push citation-death`. 
@@ -34,11 +44,6 @@ The following commands will help you perform these actions, getting you started 
     By default, it will pull from the repository which was "cloned,"
         but advanced users can add arguments to the underlying `git push` command using <git args>.
 
-Note: 
-
-Data files will be automatically downloaded during code execution, if they are not alredy in the *data* directory you specified with the `init` command. This may take up significant bandwidth -- the data files for the Sociology dataset are ~750MB.
-
-Code specified by the `knowknow.reqiure` function will be automatically downloaded by knowknow into the *code* directory you specified with the `init` command. **Be sure you trust whoever wrote the code you download.** Running arbitrary code from random strangers on your computer is a security risk.
 """
 
 if __name__ == '__main__':
@@ -115,23 +120,35 @@ if __name__ == '__main__':
             print(f"""A module with that name already exists at {fn}. 
 Either rename or remove that directory to continue.""")
 
-    elif args[0] == 'push':
+        """
+        elif args[0] == 'pull':
+            print("Unfortunately `pull` hasn't been implemented yet. Just use GitHub Desktop...")
+            #Repo.pull(url, dest_fn)
+            
+        elif args[0] == 'push':
 
-        if 'kk_code_dir' not in GLOBS:
-            raise Exception('You need to call `python -m knowknow init` first...')
+            #print("Unfortunately `push` hasn't been implemented yet. Just use GitHub Desktop...")
+            
+            from git.repo.base import Repo
 
-        if len(args) <= 3:
-            raise Exception('`clone` command takes exactly 2 arguments')
+            fld = Path(GLOBS['kk_code_dir'])
+            if not fld.exists():
+                fld.mkdir()
 
-        _, where, what = args
-        clone(where, what)
+            message = args[2]
+            
+            gtfld = Path(GLOBS['kk_code_dir'], args[1])
+            if not gtfld.exists():
+                print("No such folder exists in the knowknow code directory.")
+            else:
+                r = Repo( gtfld )
+                
+                r.index.add([str(fn) for fn in gtfld.glob("**/*") if (Path('.git') not in list(fn.parents) and fn.name != '.git')])
+                r.index.commit(message)
+                r.remotes.origin.push()
 
-    elif args[0] == 'pull':
-        print("Unfortunately `pull` hasn't been implemented yet. Just use GitHub Desktop...")
-        #Repo.pull(url, dest_fn)
-        
-    elif args[0] == 'push':
-        print("Unfortunately `push` hasn't been implemented yet. Just use GitHub Desktop...")
+            # currently I get "fatal: the remote end hung up unexpectedly'" every time. idk why
+        """        
 
     elif args[0] == 'start':
         if 'kk_code_dir' not in GLOBS:

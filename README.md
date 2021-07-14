@@ -20,13 +20,13 @@ I have included every inch of code here, leaving no stone unturned. With every `
     + `sociology-wos` ([Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/GQGJLQ)) every paper in WoS in early 2020 whose journal is in the 'Sociology' category, and which have full data. 
     + *in progress* `sociology-jstor` in-text citations and their contexts were extracted from >90k full-text Sociology articles indexed in JSTOR. 
 
-# Installation (package)
+# Installation (from PyPI)
 
-1. Install Python 3.7
+1. Install Python 3.7+
 2. Install [Build Tools for Visual Studio](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 3. Run `pip install knowknow-amcgail`
 
-# Installation (GitHub)
+# Installation (from GitHub)
 
 1. Install Python 3.7+
 2. Clone this repository to your computer
@@ -35,7 +35,7 @@ I have included every inch of code here, leaving no stone unturned. With every `
     + On Windows, I needed to install the latest versions of `numpy`, `scikit-learn` and `scipy` via .whl
     + For Windows, download from [this site](https://www.lfd.uci.edu/~gohlke/pythonlibs/), install with `pip install <fn.whl>`
 
-# Meta-commands
+# Getting Started
 
 To get started with knowknow, you need to 
     1) specify where knowknow should store data and code ("init") 
@@ -48,16 +48,29 @@ The following commands will help you perform these actions, getting you started 
     Run this command first. 
     It will prompt you for the directory to store data files and the directory where code will be stored.
 
+`python -m knowknow start <PROJ-NAME>`
+    For instance, `python -m knowknow start citation-death`. 
+    Start a JupyterLab notebook in a knowknow code directory. 
+    If the directory doesn't exist, knowknow creates the directory, and initiates it as a git repository.
+
+# [Recommended] Interfacing with GitHub
+
+In order to use the following commands you must install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+This allows you to use others' code, and to publish your own code for others to use.
+
 `python -m knowknow clone <URL>`
     For instance, `python -m knowknow clone https://github.com/amcgail/lost-forgotten`.
     Clone someone else's repository. 
 
-`python -m knowknow start <REPO-NAME>`
-    For instance, `python -m knowknow start citation-death`. 
-    Start a JupyterLab notebook in a repository. 
-    If the repository
+To make your own changes to others' code, or to share your code with the world, do the following:
 
-Note: 
+1) Create a [GitHub](https://www.github.com/) account and log in.
+2) Install [GitHub Desktop](https://desktop.github.com/), which is a simple connector between Git on your computer and GitHub, in the cloud.
+3a) [Share your code] In GitHub Desktop, choose `File -> Create Repository`, navigate to the folder containing knowknow code. This folder was created by knowknow using the `start` command. Now press "Publish Repository" in the upper right to add this code to your GitHub account.
+3b) [Contribute to others' code] In GitHub, `fork` the repository you would like to contribute to. This creates a personal copy of that repository in your GitHub account. Then clone this copy into knowknow's code directory using the `clone` command, or using GitHub desktop. Once you are satisfied with your updates, and they are pushed back to GitHub, submit a "pull request" to the original repository to ask them to review and merge your changes.
+
+# Auto-downloading Data and Code
+
 Data files will be automatically downloaded during code execution, if they are not alredy in the *data* directory you specified with the `init` command. This may take up significant bandwidth -- the data files for the Sociology dataset are ~750MB.
 
 Code specified by the `knowknow.reqiure` function will be automatically downloaded by knowknow into the *code* directory you specified with the `init` command. **Be sure you trust whoever wrote the code you download.** Running arbitrary code from random strangers on your computer is a security risk.
