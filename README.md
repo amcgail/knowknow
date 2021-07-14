@@ -51,7 +51,7 @@ The following commands will help you perform these actions, getting you started 
 `python -m knowknow start <PROJ-NAME>`
     For instance, `python -m knowknow start citation-death`. 
     Start a JupyterLab notebook in a knowknow code directory. 
-    If the directory doesn't exist, knowknow creates the directory, and initiates it as a git repository.
+    If the directory doesn't exist, knowknow creates the directory.
 
 # [Recommended] Interfacing with GitHub
 
@@ -62,7 +62,7 @@ This allows you to use others' code, and to publish your own code for others to 
     For instance, `python -m knowknow clone https://github.com/amcgail/lost-forgotten`.
     Clone someone else's repository. 
 
-To make your own changes to others' code, or to share your code with the world, do the following:
+In order to make your own changes to others' code, or to share your code with the world, do the following:
 
 1) Create a [GitHub](https://www.github.com/) account and log in.
 2) Install [GitHub Desktop](https://desktop.github.com/), which is a simple connector between Git on your computer and GitHub, in the cloud.
