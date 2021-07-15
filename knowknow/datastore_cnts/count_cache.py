@@ -286,10 +286,19 @@ class Dataset:
             print('Data file not found. Looking for entry in Harvard Dataverse...')
             from ..dataverse import download as dv_download
             self.name = dv_download( identifier )
+
+            self.load_attributes()
+            if identifier[:4] == 'doi:':
+                identifier = identifier[4:]
+            self.set_attribute( 'doi', identifier )
+
         else:
             self.name = this_entry['name']
 
             #if Path(env.variable_dir, self.name).exists():
+
+        self.load_attributes()
+
 
         #try:
         #    self.groups = self.load_variable('groups')
@@ -313,9 +322,6 @@ class Dataset:
             )
         except VariableNotFound:
             pass
-        
-
-        self.load_attributes()
 
 
 
