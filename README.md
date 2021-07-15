@@ -12,7 +12,7 @@ I have included every inch of code here, leaving no stone unturned. With every `
 # Projects built on knowknow
 
 + [amcgail/citation-death](https://github.com/amcgail/citation-death) applies the concept of 'death' to attributes of citations, and analyzes the lifecourse of cited works, cited authors, and the authors writing the citations, using the `sociology-wos-74b` dataset. 
-+ [amcgail/lost-forgotten](https://github.com/amcgail/lost-forgotten) digs deeper into . An online appendix is available [here](www.alecmcgail.com/lost&forgotten/), and the paper published in *The American Sociologist* can be found [here](https://rdcu.be/cnSFG).
++ [amcgail/lost-forgotten](https://github.com/amcgail/lost-forgotten) digs deeper into . An online appendix is available [here](http://www.alecmcgail.com/lost&forgotten/), and the paper published in *The American Sociologist* can be found [here](https://rdcu.be/cnSFG).
 
 # Datasets built with knowknow
 

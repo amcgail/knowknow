@@ -31,6 +31,12 @@ if cfile.exists():
 else:
     GLOBS = {}
 
+def setGLOB(k, v):
+    GLOBS[GLOB_KEY] = str(chosen_dir)
+    
+    with cfile.open('w') as f:
+        yaml.dump(GLOBS, f)
+
 if 'kk_data_dir' in GLOBS:
     #variable_dir = Path(os.environ['VARDIR']) if 'VARDIR' in os.environ else None
     variable_dir = Path(GLOBS['kk_data_dir'])

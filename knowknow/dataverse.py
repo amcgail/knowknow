@@ -26,6 +26,9 @@ def download(
     api_key = None
 ):
 
+    if persistent_id[:4] != 'doi:':
+        persistent_id = 'doi:'+persistent_id
+
     dv_url = f"{dataverse_server}/api/datasets/:persistentId/?persistentId={persistent_id}"
     if api_key is not None:
         dv_url += f"&key={api_key}"
@@ -39,7 +42,7 @@ def download(
     v = res['data']['latestVersion']
     title = [x for x in v['metadataBlocks']['citation']['fields'] if x['typeName'] == 'title'][0]['value']
 
-    print(f"Retrieving latest version of f{title}. datasetId = {v['datasetId']}. last updated {v['lastUpdateTime']}.")
+    print(f"Retrieving latest version of {title}. datasetId = {v['datasetId']}. last updated {v['lastUpdateTime']}.")
     print(f"{len(v['files'])} files. Total file size = {sum(x['dataFile']['filesize'] for x in v['files']) / 1000000:0.1f} Mb")
     
     outFold = env.variable_dir.joinpath(title)
@@ -68,6 +71,10 @@ def download(
     import zipfile
     with zipfile.ZipFile(tmp_file, 'r') as zip_ref:
         zip_ref.extractall(outFold)
+
+    tmp_file.unlink()
+
+    return title
 
 
 def upload( 

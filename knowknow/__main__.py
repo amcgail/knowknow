@@ -1,4 +1,4 @@
-from .env import GLOBS, cfile
+from .env import GLOBS, setGLOB
 from git.repo.base import Repo
 
 DOCUMENTATION = """
@@ -91,10 +91,7 @@ if __name__ == '__main__':
                     pass
 
                 # make the update
-                GLOBS[GLOB_KEY] = str(chosen_dir)
-                
-                with cfile.open('w') as f:
-                    yaml.dump(GLOBS, f)
+                setGLOB( GLOB_KEY, str(chosen_dir) )
 
                 print(f"Dataset directory updated: {GLOB_KEY} = {str(chosen_dir)}")
                 break
