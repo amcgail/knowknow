@@ -4,4 +4,4 @@ knowknow_amcgail.egg-info/**/*
 dist/**/*
 build/**/*
 .vscode/*
-config.yaml
+knowknow/config.yaml
