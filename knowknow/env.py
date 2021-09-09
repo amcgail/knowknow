@@ -13,7 +13,7 @@ import yaml
 
 # more local stuff
 if  'NBDIR' in os.environ:
-    notebook_dir = Path(os.environ['NBDIR']).parent
+    notebook_dir = Path(os.environ['NBDIR'])
     figure_dir = notebook_dir.joinpath('figures')
     #table_dir = notebook_dir.joinpath('tables')
 
@@ -31,6 +31,12 @@ if cfile.exists():
 else:
     GLOBS = {}
 
-if 'kkdir' in GLOBS:
+def setGLOB(k, v):
+    GLOBS[GLOB_KEY] = str(chosen_dir)
+    
+    with cfile.open('w') as f:
+        yaml.dump(GLOBS, f)
+
+if 'kk_data_dir' in GLOBS:
     #variable_dir = Path(os.environ['VARDIR']) if 'VARDIR' in os.environ else None
-    variable_dir = Path(GLOBS['kkdir'], 'data')
+    variable_dir = Path(GLOBS['kk_data_dir'])

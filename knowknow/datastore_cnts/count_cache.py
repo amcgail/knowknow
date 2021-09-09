@@ -4,7 +4,7 @@ import pickle
 from .. import Path, Counter, defaultdict, download_file, VariableNotFound
 
 __all__ = [
-    'Dataset','CitedRef'
+    'Dataset','CitedRef','dataset_metadata'
 ]
 
 """
@@ -210,6 +210,32 @@ class Determ:
 
 
 
+# adding some metadata capabilities
+
+dataset_metadata = {}
+
+for fold in Path(env.variable_dir).glob("*"):
+    if not fold.is_dir():
+        continue
+    
+    attr_f = fold.joinpath('_attributes')
+    with attr_f.open('rb') as inf:
+        mdata = pickle.load( inf )
+        mdata['name'] = fold.name
+
+        dataset_metadata[fold.name] = mdata
+
+if False:
+    # first idea: do it in GLOBS.
+    # bad idea, because it won't be ported around with the files themselves
+    if 'dataset_metadata' not in GLOBS:
+        setGLOB( 'dataset_metadata', [] )
+
+    GLOBS['dataset_metadata']
+
+    def setMetadata(k, v):
+        dataset_metadata[k] = v
+        setGLOB('dataset_metadata', dataset_metadata)
 
 
 def ktrans(kwargs):
@@ -238,8 +264,41 @@ class Dataset:
 
     attr_cache = {}
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, identifier):
+
+        this_entry = None
+        for entry in dataset_metadata.values():
+            if entry['name'] == identifier:
+                this_entry = entry
+                break
+            if 'doi' in entry:
+                to_check = identifier
+                if to_check[:4] == 'doi:':
+                    to_check = to_check[4:]
+                if entry['doi'] == to_check:
+                    this_entry = entry
+                    break
+
+        if this_entry is None:
+            # this is new code, for Dataverse, which works well :D
+            # find the dataset metadata if it exists...
+            
+            print('Data file not found. Looking for entry in Harvard Dataverse...')
+            from ..dataverse import download as dv_download
+            self.name = dv_download( identifier )
+
+            self.load_attributes()
+            if identifier[:4] == 'doi:':
+                identifier = identifier[4:]
+            self.set_attribute( 'doi', identifier )
+
+        else:
+            self.name = this_entry['name']
+
+            #if Path(env.variable_dir, self.name).exists():
+
+        self.load_attributes()
+
 
         #try:
         #    self.groups = self.load_variable('groups')
@@ -263,9 +322,6 @@ class Dataset:
             )
         except VariableNotFound:
             pass
-        
-
-        self.load_attributes()
 
 
 
@@ -422,7 +478,8 @@ class Dataset:
     def load_variable(self, name):
 
         # go get this collection, if it isn't already downloaded...
-        if not Path(env.variable_dir).joinpath(self.name).exists():
+        # this is old code, build for OSF, which doesn't have a good API
+        if False and not Path(env.variable_dir).joinpath(self.name).exists():
             print("collection", self.name, "does not exist...")
             print("attempting to load from OSF")
 
@@ -474,6 +531,7 @@ class Dataset:
     def set_attribute(self, what, value):
         self.docs[what] = value
         self.save_variable('_attributes', self.docs)
+        dataset_metadata[self.name][what] = value
 
     def add_grouping(self, typ, mp):
         self.groupings.append( (typ,mp) )
