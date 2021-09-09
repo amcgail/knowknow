@@ -261,10 +261,10 @@ class TimeTrend:
                 inparens = re.findall(r'\(([^)]+)\)', self.name)[0]
                 self.pub = int(inparens)
 
-    def avg_between(self, A, B): #not including B
-        return self.sum_between(A, B) / (B-A)
+    def avg_between(self, A, B): # including B
+        return self.sum_between(A, B) / (B-A+1)
             
-    def sum_between(self, A, B): #not including B
+    def sum_between(self, A, B): # including B
         if self._cumsum is None:
             # cumsum makes sum_between's very efficient!
             self._cumsum = [self.c[self.data_start]]
