@@ -37,7 +37,8 @@ def download(
     res = r.json()
 
     if res['status'] != 'OK':
-        raise Exception("There was an issue retrieving the dataset. Please check your persistent ID, and provide an API key if this is a DRAFT version.")
+        #raise Exception("There was an issue retrieving the dataset. Please check your persistent ID, and provide an API key if this is a DRAFT version.")
+        return None
 
     v = res['data']['latestVersion']
     title = [x for x in v['metadataBlocks']['citation']['fields'] if x['typeName'] == 'title'][0]['value']

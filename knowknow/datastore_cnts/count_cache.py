@@ -219,6 +219,11 @@ for fold in Path(env.variable_dir).glob("*"):
         continue
     
     attr_f = fold.joinpath('_attributes')
+    if not attr_f.exists():
+        attr_f.parent.mkdir(parents=True, exist_ok=True)
+        with attr_f.open('wb') as dummy_f:
+            pickle.dump({}, attr_f)
+
     with attr_f.open('rb') as inf:
         mdata = pickle.load( inf )
         mdata['name'] = fold.name
@@ -256,6 +261,17 @@ def ktrans(kwargs):
 
 
 
+def get_yn(prompt):
+    answer = None 
+    while answer not in ("yes", "no"): 
+        answer = input(f"{prompt}: ").lower()
+        if answer == "yes": 
+             return True
+        elif answer == "no": 
+             return False
+        else: 
+        	print("Please enter yes or no.") 
+
 
 
 
@@ -286,6 +302,14 @@ class Dataset:
             print('Data file not found. Looking for entry in Harvard Dataverse...')
             from ..dataverse import download as dv_download
             self.name = dv_download( identifier )
+            if self.name is None:
+                print('No entry found in Harvard dataverse.')
+                if get_yn(f'Create new folder with name `{identifier}`?'):
+                    self.name = identifier
+                    dataset_metadata[self.name] = {}
+                else:
+                    raise Exception("Operation aborted.")
+                
 
             self.load_attributes()
             if identifier[:4] == 'doi:':
@@ -423,10 +447,13 @@ class Dataset:
         if hasattr(ent, fn_name):
             process = getattr(ent, fn_name)
 
-        myl = sorted( Determ(
+        cs = Determ(
             dataset = self,
             **kwargs
-        ).cits[ what ] )
+        ).cits
+        cs = cs[cs['count'] > 0]
+        
+        myl = sorted( cs[ what ] )
         myl = list(map(process, myl))
         return myl
 

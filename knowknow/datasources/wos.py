@@ -84,6 +84,9 @@ class counter:
         if ".".join(sorted(space.split("."))) != space:
             raise Exception(space, "should be sorted...")
 
+        if type(term) != tuple:
+            term = tuple([term])
+
         # it's a set, yo
         self.track_doc[space][term].add(doc)
         # update cnt_doc
@@ -96,10 +99,14 @@ class counter:
         self.dcount = 0
         files = list(self.wos_txt_base.glob("**/*.txt"))
         for i, f in enumerate(files):
-
-            with f.open(encoding='utf8', newline='') as pfile:
-                r = DictReader(pfile, delimiter='\t', quoting=3)
-                rows = list(r)
+            
+            try:
+                with f.open(encoding='utf8', newline='') as pfile:
+                    r = DictReader(pfile, delimiter='\t', quoting=3)
+                    rows = list(r)
+            except UnicodeDecodeError:
+                print(f"Cannot load file! {f.name}. Skipping.")
+                continue
 
             if i % 50 == 0:
                 print("File %s/%s: %s" % (i, len(files), f.name))
@@ -204,6 +211,9 @@ class counter:
     def save_counters(self):
         db = Dataset(self.output_database)
         db.clear_all()
+
+        db.save_variable('_attributes', {})
+
         for k, count in self.doc.items():
             varname = "doc ___ %s" % k
             db.save_variable(varname, dict(count))
