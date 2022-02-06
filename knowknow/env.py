@@ -32,7 +32,7 @@ else:
     GLOBS = {}
 
 def setGLOB(k, v):
-    GLOBS[GLOB_KEY] = str(chosen_dir)
+    GLOBS[k] = str(v)
     
     with cfile.open('w') as f:
         yaml.dump(GLOBS, f)

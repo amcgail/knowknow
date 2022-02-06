@@ -202,12 +202,14 @@ class wos:
             self.cnt((ffa,doc.publish), 'ffa.fy', doc.uid)
             self.cnt((ffa,doc.journal), 'ffa.fj', doc.uid)
             self.cnt((ref.full_ref,ffa), 'c.ffa', doc.uid)
+            self.cnt((ref.full_ref,ffa, doc.publish), 'c.ffa.fy', doc.uid)
             #self.cnt((ffa,r['SO'], int(r['PY'])), 'ffa.fj.fy', doc.uid)
 
             for a in doc.citing_authors:
                 self.cnt(a, 'fa', doc.uid)
                 self.cnt((a, doc.publish), 'fa.fy', doc.uid)
                 self.cnt((a, doc.journal), 'fa.fj', doc.uid)
+                self.cnt((ref.full_ref,a, doc.publish), 'c.fa.fy', doc.uid)
                 #self.cnt((a,r['SO'], int(r['PY'])), 'fa.fj.fy', doc.uid)
 
                 self.cnt((ref.full_ref,a), 'c.fa', doc.uid)

@@ -8,6 +8,9 @@ import requests
 from pathlib import Path
 
 
+from requests import ConnectionError
+
+
 def confirm(pmt = "",):
     """
     Ask user to enter Y or N (case-insensitive).
@@ -33,7 +36,11 @@ def download(
     if api_key is not None:
         dv_url += f"&key={api_key}"
 
-    r = requests.get(dv_url)
+    try:
+        r = requests.get(dv_url)
+    except ConnectionError:
+        return None
+
     res = r.json()
 
     if res['status'] != 'OK':

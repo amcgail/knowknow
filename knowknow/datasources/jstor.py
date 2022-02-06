@@ -43,23 +43,6 @@ max_uni_length = max( len(x) for x in ALL_UNIVERSITIES )
 
 
 
-def citation_iterator(t):
-    citations = extractCitation(t)
-    for c in citations:
-        name = c['names']
-        name = name.replace("'s", "")  # change "Simmel's" to "Simmel"
-
-        years = c['year'].split(",")
-        for y in years:
-            y = y.strip()  # get rid of the extra spacing
-            y = re.findall(r'[0-9]{4}', y)  # this strips out the 'a' in '1995a'
-            if not len(y):
-                faulty_years.add(c['year'])
-                continue
-
-            y = y[0]
-            yield "%s (%s)" % (name, y)
-
 
 class ParseError(Exception):
     pass
@@ -803,12 +786,7 @@ def fn2doi(fn):
 
 
 
-
-
-
-def _zip_doc_iterator(zipfiles):
-    from random import shuffle
-
+def _zip_read_N(zipfiles):
     all_files = []
     for zf in zipfiles:
         archive = ZipFile(zf, 'r')
@@ -817,9 +795,34 @@ def _zip_doc_iterator(zipfiles):
 
         all_files += [(archive, name) for name in names]
 
+    return len(all_files)
+
+
+def _zip_doc_iterator(zipfiles, SKIP_N=None):
+    from random import shuffle
+
+    all_files = []
+    for zf in zipfiles:
+        try:
+            archive = ZipFile(zf, 'r')
+        except:
+            print("Erroring on file ", zf)
+            raise
+
+        files = archive.namelist()
+        names = list(set(getname(x) for x in files))
+
+        all_files += [(archive, name) for name in names]
+
     shuffle(all_files)
 
-    for archive, name in all_files:
+    for i,(archive, name) in enumerate(all_files):
+        
+        if SKIP_N is not None:
+            if i % (SKIP_N+1) != 0:
+                #skip_counter += 1
+                continue
+
         try:
             yield (
                 name.split("-")[-1].replace("_", "/"),
@@ -850,10 +853,14 @@ def title_looks_researchy(lt):
 
 
 
-def doc_iterator(jstor_zip_base, research_limit=True, complex_parsing=True):
+def doc_iterator(jstor_zip_base, research_limit=True, complex_parsing=True, SKIP_N=None):
     zipfiles = list(Path(jstor_zip_base).glob("*.zip"))
 
-    for i, (doi, metadata_str, ocr_str) in enumerate(_zip_doc_iterator(zipfiles)):
+    NDOC = _zip_read_N(zipfiles)
+
+    print("Iterating over ", NDOC, "documents")
+
+    for i, (doi, metadata_str, ocr_str) in enumerate(_zip_doc_iterator(zipfiles, SKIP_N)):
 
         try:
             drep = Document.parse_metadata(metadata_str)
@@ -875,8 +882,84 @@ def doc_iterator(jstor_zip_base, research_limit=True, complex_parsing=True):
         except ParseError:
             continue
 
-        yield d
+        drep['content'] = str(d)
+        drep['doi'] = doi
+        drep['citations'] = list(citations_iterator(drep))
 
+        yield doi, drep
+
+
+
+def citation_parens_iterator(t):
+    citations = extractCitation(t)
+    for c in citations:
+        name = c['names']
+        name = name.replace("'s", "")  # change "Simmel's" to "Simmel"
+
+        years = c['year'].split(",")
+        for y in years:
+            y = y.strip()  # get rid of the extra spacing
+            y = re.findall(r'[0-9]{4}', y)  # this strips out the 'a' in '1995a'
+            if not len(y):
+                faulty_years.add(c['year'])
+                continue
+
+            y = y[0]
+            yield "%s (%s)" % (name, y)
+
+def citations_iterator(drep):
+
+    for index, (parenStart, parenContents) in enumerate(getOuterParens(drep['content'])):
+
+        citations = list(citation_parens_iterator(parenContents))
+        if not len(citations):
+            continue
+
+        citation = {
+            "citations": citations,
+            "contextLeft": drep['content'][parenStart - 400 + 1:parenStart + 1],
+            "contextRight": drep['content'][
+                            parenStart + len(parenContents) + 1:parenStart + len(parenContents) + 1 + 100],
+            "where": parenStart
+        }
+
+        # cut off any stuff before the first space
+        first_break_left = re.search(r"[\s.!?]+", citation['contextLeft'])
+        if first_break_left is not None:
+            clean_start_left = citation['contextLeft'][first_break_left.end():]
+        else:
+            clean_start_left = citation['contextLeft']
+
+        # cut off any stuff after the last space
+        last_break_right = list(re.finditer(r"[\s.!?]+", citation['contextRight']))
+        if len(last_break_right):
+            clean_end_right = citation['contextRight'][:last_break_right[-1].start()]
+        else:
+            clean_end_right = citation['contextRight']
+
+        # we don't want anything more than a sentence
+
+        sentence_left = sent_tokenize(clean_start_left)
+        if len(sentence_left):
+            sentence_left = sentence_left[-1]
+        else:
+            sentence_left = ""
+
+        sentence_right = sent_tokenize(clean_end_right)[0]
+        if len(sentence_right):
+            sentence_right = sentence_right[0]
+        else:
+            sentence_right = ""
+
+        # finally, strip the parentheses from the string
+        sentence_left = sentence_left[:-1]
+        sentence_right = sentence_right[1:]
+
+        # add the thing in context
+        full = sentence_left + "<CITATION>" + sentence_right
+
+        citation['contextPure'] = sentence_left
+        yield citation
 
 def doc_iterator_forMongo(jstor_zip_base,
                  journals_filter=None,
@@ -923,62 +1006,7 @@ def doc_iterator_forMongo(jstor_zip_base,
 
             drep['content'] = get_content_string(ocr_str)
 
-            drep['citations'] = []
-
-            # loop through the matching parentheses in the document
-            for index, (parenStart, parenContents) in enumerate(getOuterParens(drep['content'])):
-
-                citations = list(citation_iterator(parenContents))
-                if not len(citations):
-                    continue
-
-                citation = {
-                    "citations": citations,
-                    "contextLeft": drep['content'][parenStart - 400 + 1:parenStart + 1],
-                    "contextRight": drep['content'][
-                                    parenStart + len(parenContents) + 1:parenStart + len(parenContents) + 1 + 100],
-                    "where": parenStart
-                }
-
-                # cut off any stuff before the first space
-                first_break_left = re.search(r"[\s.!?]+", citation['contextLeft'])
-                if first_break_left is not None:
-                    clean_start_left = citation['contextLeft'][first_break_left.end():]
-                else:
-                    clean_start_left = citation['contextLeft']
-
-                # cut off any stuff after the last space
-                last_break_right = list(re.finditer(r"[\s.!?]+", citation['contextRight']))
-                if len(last_break_right):
-                    clean_end_right = citation['contextRight'][:last_break_right[-1].start()]
-                else:
-                    clean_end_right = citation['contextRight']
-
-                # we don't want anything more than a sentence
-
-                sentence_left = sent_tokenize(clean_start_left)
-                if len(sentence_left):
-                    sentence_left = sentence_left[-1]
-                else:
-                    sentence_left = ""
-
-                sentence_right = sent_tokenize(clean_end_right)[0]
-                if len(sentence_right):
-                    sentence_right = sentence_right[0]
-                else:
-                    sentence_right = ""
-
-                # finally, strip the parentheses from the string
-                sentence_left = sentence_left[:-1]
-                sentence_right = sentence_right[1:]
-
-                # add the thing in context
-                full = sentence_left + "<CITATION>" + sentence_right
-
-                citation['contextPure'] = sentence_left
-                # print(full)
-
-                drep['citations'].append(citation)
+            drep['citations'] = list(citations_iterator(drep))
 
             yield doi, drep
 
@@ -998,11 +1026,12 @@ class jstor_counter:
 
     def __init__(
             self,
-            jstor_zip_base, output_database, name_blacklist=[],
-            RUN_EVERYTHING=False,
+            jstor_zip_base, output_database='default-database-name', name_blacklist=[],
+            RUN_EVERYTHING=False, complex_parsing=False,
             groups=None, group_reps=None,
             citations_filter=None, journals_filter=None, debug=False,
-            CONSOLIDATE_ITERS=0, term_whitelist = set(), NUM_TERMS_TO_KEEP=100, stopwords = None
+            CONSOLIDATE_ITERS=0, term_whitelist = set(), NUM_TERMS_TO_KEEP=100, stopwords = None,
+            SKIP_N=None
     ):
 
         if stopwords is None:
@@ -1015,6 +1044,7 @@ class jstor_counter:
         self.cits = 0
         self.last_print = 0
         self.citations_skipped = 0
+        self.no_citations = 0
 
         self.jstor_zip_base = Path(jstor_zip_base)
         assert(self.jstor_zip_base.exists())
@@ -1027,6 +1057,8 @@ class jstor_counter:
         self.citations_filter = citations_filter
         self.journals_filter = journals_filter
         self.debug = debug
+        self.complex_parsing = complex_parsing
+        self.SKIP_N = SKIP_N
 
         self.CONSOLIDATE_ITERS = CONSOLIDATE_ITERS
         self.NUM_TERMS_TO_KEEP = NUM_TERMS_TO_KEEP
@@ -1133,16 +1165,6 @@ class jstor_counter:
 
     def account_for(self, doc):
 
-        # consolidating "terms" counter as I go, to limit RAM overhead
-        # I'm only interested in the most common 1000
-        if self.CONSOLIDATE_ITERS > 0:
-            if self.cits - self.last_print > self.CONSOLIDATE_ITERS:
-                print("Citation %s" % self.cits)
-                print("Term %s" % len(self.doc['t']))
-                # print(sample(list(self.doc['t']), 10))
-                last_print = self.cits
-                self.consolidate_terms()
-
         if 'citations' not in doc or not len(doc['citations']):
             # print("No citations", doc['doi'])
             return
@@ -1154,7 +1176,7 @@ class jstor_counter:
             for cited in c['citations']:
 
                 if self.citations_filter is not None and (cited not in self.citations_filter):
-                    citations_skipped += 1
+                    self.citations_skipped += 1
                     continue
 
                 self.cits += 1
@@ -1196,7 +1218,7 @@ class jstor_counter:
             # print(len(tups),c['contextPure'], "---", tups)
 
             if len(self.term_whitelist):
-                tups = [x for x in tups if x in term_whitelist]
+                tups = [x for x in tups if x in self.term_whitelist]
 
             # just term count, in case we are using the `basic` mode
             for t1 in tups:
@@ -1210,7 +1232,7 @@ class jstor_counter:
 
                 for cited in c['citations']:
 
-                    if use_included_citations_filter and (cited not in included_citations):
+                    if self.use_included_citations_filter and (cited not in self.included_citations):
                         continue
 
                     # term features
@@ -1251,8 +1273,8 @@ class jstor_counter:
                         self.cnt((a,), 'fa', doc['doi'])
 
                     # add to counters for citation-citation counts
-                    for cited1 in c['citations']:
-                        for cited2 in c['citations']:
+                    for cited1 in cited['citations']:
+                        for cited2 in cited['citations']:
                             if cited1 >= cited2:
                                 continue
 
@@ -1272,10 +1294,17 @@ class jstor_counter:
 
         debug = False
 
-        for i, (doi, drep) in enumerate(self.doc_iterator()): #!!!!!!!!!!!!!!!!! fix this now...
+        di = doc_iterator(self.jstor_zip_base, research_limit=True, complex_parsing=self.complex_parsing, SKIP_N=self.SKIP_N)
 
-            if i % 1000 == 0:
+        #skip_counter = 0
+
+        print(f"Will print updated statistics every {1000//(self.SKIP_N+1)} documents.")
+
+        for i, (doi, drep) in enumerate(di): #!!!!!!!!!!!!!!!!! fix this now...
+
+            if i % (1000//(self.SKIP_N+1)) == 0:
                 print("Document", i, "...",
+                      #skip_counter, "skipped...",
                       len(self.doc['fj'].keys()), "journals...",
                       len(self.doc['c'].keys()), "cited works...",
                       len(self.doc['fa'].keys()), "authors...",
@@ -1290,6 +1319,21 @@ class jstor_counter:
 
                 # only include journals in the list "included_journals"
             if self.journals_filter is not None and (drep['journal'] not in self.journals_filter):
+                continue
+
+            # consolidating "terms" counter as I go, to limit RAM overhead
+            # I'm only interested in the most common 1000
+            if self.CONSOLIDATE_ITERS > 0:
+                if self.cits - self.last_print > self.CONSOLIDATE_ITERS:
+                    print("Citation %s" % self.cits)
+                    print("Term %s" % len(self.doc['t']))
+                    # print(sample(list(self.doc['t']), 10))
+                    last_print = self.cits
+                    self.consolidate_terms()
+
+            if 'citations' not in drep or not len(drep['citations']):
+                # print("No citations", doc['doi'])
+                self.no_citations += 1
                 continue
 
             # now that we have all the information we need,

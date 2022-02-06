@@ -5,3 +5,4 @@ dist/**/*
 build/**/*
 .vscode/*
 knowknow/config.yaml
+.DS_Store
