@@ -207,6 +207,9 @@ class counter:
             if r['DT'] != "Article":
                 continue
 
+            if r['PY'] is None:
+                continue
+
             try:
                 int(r['PY'])
             except ValueError:
