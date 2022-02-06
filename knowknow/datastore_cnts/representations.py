@@ -20,24 +20,37 @@ class wos_doc:
 
 
     def generate_references(self):
-        refs = self.raw['CR'].split(';')
-        for r in refs:
+        if 'CR' in self.raw:
 
+            refs = self.raw['CR']
+            if type(refs) == str:
+                refs = refs.split(';')
+            elif type(refs) == list:
+                refs = refs
+            else:
+                raise Exception("CR is strange type")
 
-            try:
-                ref = wos_ref(r)
+            for r in refs:
 
-                if "*" in ref.author:
-                    continue
+                try:
+                    ref = wos_ref(r)
 
-                yield ref
+                    if "*" in ref.author:
+                        continue
 
-            except invalid_entry:
-                pass
+                    yield ref
+
+                except invalid_entry:
+                    pass
 
     def get_citing_authors(self):
-        authors = self.raw['AU'].split(";")
-        for x in authors:
+        au = self.raw['AU']
+        if type(au) == str:
+            au = au.split(";")
+        elif type(au) == list:
+            au = au
+        
+        for x in au:
             x = x.strip().lower()
             x = re.sub("[^a-zA-Z\s,]+", "", x)  # only letters and spaces allowed
 

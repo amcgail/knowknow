@@ -3,6 +3,8 @@ from .. import env, defaultdict, pd
 import pickle
 from .. import Path, Counter, defaultdict, download_file, VariableNotFound
 
+from requests import ConnectionError
+
 __all__ = [
     'Dataset','CitedRef','dataset_metadata'
 ]
@@ -46,12 +48,13 @@ class ent:
     cited_pub = 'c'
     citing_journal = 'fj'
     first_citing_author = 'ffa'
+    term = 't'
 
     #@classmethod
     #def c_fn(cls, x):
     #    return CitedRef(x)
 
-    ents = 'fa,ta,fy,ty,c,fj,ffa'.split(",")
+    ents = 'fa,ta,fy,ty,c,fj,ffa,t'.split(",")
 
 
 
@@ -302,11 +305,12 @@ class Dataset:
             print('Data file not found. Looking for entry in Harvard Dataverse...')
             from ..dataverse import download as dv_download
             self.name = dv_download( identifier )
+
             if self.name is None:
                 print('No entry found in Harvard dataverse.')
                 if get_yn(f'Create new folder with name `{identifier}`?'):
                     self.name = identifier
-                    dataset_metadata[self.name] = {}
+                    dataset_metadata[self.name] = {'name':self.name}
                 else:
                     raise Exception("Operation aborted.")
                 
