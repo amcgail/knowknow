@@ -217,24 +217,25 @@ class Determ:
 
 dataset_metadata = {}
 
-for fold in Path(env.variable_dir).glob("*"):
-    if not fold.is_dir():
-        continue
-    
-    attr_f = fold.joinpath('_attributes')
-    if not attr_f.exists():
-        attr_f.parent.mkdir(parents=True, exist_ok=True)
-        with attr_f.open('wb') as dummy_f:
-            pickle.dump({}, dummy_f)
+if hasattr(env,'variable_dir'):
+    for fold in Path(env.variable_dir).glob("*"):
+        if not fold.is_dir():
+            continue
 
-    with attr_f.open('rb') as inf:
-        try:
-            mdata = pickle.load( inf )
-            mdata['name'] = fold.name
+        attr_f = fold.joinpath('_attributes')
+        if not attr_f.exists():
+            attr_f.parent.mkdir(parents=True, exist_ok=True)
+            with attr_f.open('wb') as dummy_f:
+                pickle.dump({}, dummy_f)
 
-            dataset_metadata[fold.name] = mdata
-        except EOFError:
-            continue 
+        with attr_f.open('rb') as inf:
+            try:
+                mdata = pickle.load( inf )
+                mdata['name'] = fold.name
+
+                dataset_metadata[fold.name] = mdata
+            except EOFError:
+                continue 
 
 if False:
     # first idea: do it in GLOBS.
