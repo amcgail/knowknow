@@ -76,7 +76,7 @@ if __name__ == '__main__':
                 chosen_dir = input(f"Enter the directory where knowknow will keep {name} <default: {default}> (Ctrl+C to exit) : ") or str(default)
                 chosen_dir = Path(chosen_dir)
                 if not chosen_dir.parent.exists():
-                    ans = None
+                    ans = 'pooty' # don't put this as None... some Pythons care?
                     while ans not in "ynYN":
                         ans = input("The parent of this directory does not exist. Continue (y/n)?")
                     if ans in "nN":
