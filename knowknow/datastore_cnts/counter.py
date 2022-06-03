@@ -1,6 +1,6 @@
 from .. import defaultdict, Path
 from .count_cache import Dataset
-from .representations import wos_doc
+from ..datasources.wos import doc_iterator
 
 
 
@@ -38,7 +38,7 @@ class wos:
             RUN_EVERYTHING=True, 
             groups=None, group_reps=None,
             citations_filter=None, journals_filter=None, debug=False, 
-            trimCounters = False
+            trimCounters = False, wos_type='csv'
     ):
         
         self.wos_txt_base = Path(wos_txt_base)
@@ -49,6 +49,8 @@ class wos:
         self.output_database = output_database
         self.groups = groups
         self.group_reps = group_reps
+
+        self.wos_type = wos_type
         
         self.RUN_EVERYTHING = RUN_EVERYTHING
         self.citations_filter = citations_filter
@@ -110,6 +112,9 @@ class wos:
         if ".".join(sorted(space.split("."))) != space:
             raise Exception(space, "should be sorted...")
 
+        if type(term) != tuple:
+            term = tuple([term])
+
         # it's a set, yo
         self.track_doc[space][term].add(doc)
         # update cnt_doc
@@ -119,45 +124,18 @@ class wos:
 
 
         
+
     def doc_iterator(self):
-        # processes WoS txt output files one by one, counting relevant cooccurrences as it goes
-        self.dcount=0
-        files = list(self.wos_txt_base.glob("**/*.txt"))
-        for i, f in enumerate( files ):
+        it = doc_iterator(base=self.wos_txt_base, type=self.wos_type)
 
-            with f.open(encoding='utf8', newline='') as pfile:
-                r = DictReader(pfile, delimiter='\t', quoting=3)
-                rows = list(r)
+        for doc in it:
+            # implements the journals filter!
+            if self.journals_filter is not None and doc.journal.lower() not in self.journals_filter:
+                continue
 
-            if i % 50 == 0:
-                print("File %s/%s: %s" % (i, len(files),f.name))
-                print("Document: %s" % self.dcount)
-                print("Citations: %s" % len(self.doc['c']))
-            
-            if i > 10:
-                if self.debug:
-                    break
+            yield doc
 
-            for i, r in enumerate(rows):
-                
-                if r['DT'] != "Article":
-                    continue
-                                
-                try:
-                    int(r['PY'])
-                except ValueError:
-                    print(r)
-                    raise
 
-                # REMEMBER THIS! journals are in lowercase... not case sensitive
-                
-                # implements the journals filter!
-                if self.journals_filter is not None and r['SO'].lower() not in self.journals_filter:
-                    continue
-        
-                yield wos_doc(r)
-                
-                self.dcount+=1
 
     def count_citation(self, doc, ref):
         
@@ -202,14 +180,14 @@ class wos:
             self.cnt((ffa,doc.publish), 'ffa.fy', doc.uid)
             self.cnt((ffa,doc.journal), 'ffa.fj', doc.uid)
             self.cnt((ref.full_ref,ffa), 'c.ffa', doc.uid)
-            self.cnt((ref.full_ref,ffa, doc.publish), 'c.ffa.fy', doc.uid)
+            #self.cnt((ref.full_ref,ffa, doc.publish), 'c.ffa.fy', doc.uid)
             #self.cnt((ffa,r['SO'], int(r['PY'])), 'ffa.fj.fy', doc.uid)
 
             for a in doc.citing_authors:
                 self.cnt(a, 'fa', doc.uid)
                 self.cnt((a, doc.publish), 'fa.fy', doc.uid)
                 self.cnt((a, doc.journal), 'fa.fj', doc.uid)
-                self.cnt((ref.full_ref,a, doc.publish), 'c.fa.fy', doc.uid)
+                #self.cnt((ref.full_ref,a, doc.publish), 'c.fa.fy', doc.uid)
                 #self.cnt((a,r['SO'], int(r['PY'])), 'fa.fj.fy', doc.uid)
 
                 self.cnt((ref.full_ref,a), 'c.fa', doc.uid)
@@ -338,22 +316,201 @@ class wos:
                     self.cnt((cage1, cage2), 'c1age.c2age', doc.uid)
 
 
+    def count_coauthors(self):
+        
+        for doc in self.doc_iterator():
+            for a1 in doc.citing_authors:
+                for a2 in doc.citing_authors:
+                    if a1 != a2:
+                        self.cnt((a1, a2), 'fa1.fa2', doc.uid)
+
+        print("Finished coauthor logging!")
+
+
     def run(self):
         self.main_loop()
         if self.RUN_EVERYTHING:
             self.count_ages()
             self.count_cocitations()
+            self.count_coauthors()
         self.save_counters()
 
-class wos_noself(wos):
 
-    # all that needs to be changed is the main loop.
-    # skip citations where the names match.
+class counter:
+    """
+    The counter class manages coocurrence counts.
+    It is useful for storing and retrieving them with memory and disk-space efficiently,
+        and for containing maintenance and analysis functions.
+    It is written at relatively high level of generality, 
+        to reduce overall code size.
+    Initiate a counter with its name, 
+        which identifies it in the Dataset.
+    """
+    def __init__(self, name=None):
+        import pickle
+        self.name = name
+        
+        ctf = f'{name}.counts.pickle'
+        idf = f'{name}.ids.pickle'
+        
+        if Path(ctf).exists():
+            print(f'Loading {name} from disk...')
+            with open(ctf, 'rb') as inf:
+                self.counts = pickle.load(inf)
+            with open(idf, 'rb') as inf:
+                self.ids = pickle.load(inf)
+                
+        else:
+            if name is not None:
+                print(f'Blank counter with name {name}')
+            else:
+                print(f'Blank counter with no name')
+                
+            self.counts = {}
+            self.ids = {}
+                
+    ###############   FOR COUNTING   ####################
+    
+    def count(self, info, combinations=[]):
+        """
+        `info` is a dictionary of information about the entity.
+        `combinations` is a list of the combinations of keys in `info` which the counter should count
+        """
+        ids = {
+            k:self.idof( k, v )
+            for k,v in info.items()
+        }
+        
+        for c in combinations:
+            # dim = len(c)
+            # cname = ".".join(sorted(c))
+            assert(all( x in info for x in c ))
+            
+            if c not in self.counts:
+                self.counts[c] = np.zeros( tuple([10]*len(c)), dtype=object ) # initialize small N-attrs sized array... agh np.int16 overflows easily... gotta upgrade to object?
 
-    def extra_filter_doc_ref(self, doc, ref):
-        #print(doc,ref)
-        if doc.citing_authors[0] == ref.author[:-1].lower():
-            #print("skipping!", doc.citing_authors[0], ref.author, doc.raw['TI'])
-            return False
+            self.counts[c][tuple( ids[ck] for ck in c )] += 1
 
-        return True
+    # returns id, or makes a new one.
+    # often needs to expand the arrays
+    def idof(self, kind, name):       
+        
+        if kind not in self.ids:
+            self.ids[kind] = {}
+            
+        # if you've never seen it, add this ID to the dict
+        if name not in self.ids[kind]:
+            new_id = len(self.ids[kind])
+            self.ids[kind][name] = new_id
+            
+            # now have to expand all the np arrays...
+            # have to loop through all series, because you have to expand fy.ty.t as well as t :O
+            for k in self.counts:
+                if not kind in k: # remember k is a tuple... kind is a string representing a type of count
+                    continue
+                    
+                arr_index = k.index(kind)
+                
+                # no need to pad if it's already big enough
+                current_shape = self.counts[k].shape[arr_index]
+                if current_shape >= new_id+1:
+                    continue
+                    
+                self.counts[k] = np.pad( 
+                    self.counts[k], 
+
+                    # exponential growth :) 
+                    # this (current_shape*0.25) limits the number of pad calls we need.
+                    # these become expensive if we do them all the time
+                    [(0,int(current_shape*0.25)*(dim==arr_index)) for dim in range(len(k))], 
+
+                    mode='constant', 
+                    constant_values=0 
+                )
+            
+        return self.ids[kind][name]
+        
+          
+                
+                
+    ###############   FOR RECALL   ####################
+        
+    def __call__(self, *args, **kwargs):
+        cname = tuple(sorted(kwargs.keys()))
+        
+        # just figuring out what the proper index in the matrix is...
+        my_id = []
+        for cpart in cname:
+            if kwargs[cpart] not in self.ids[ cpart ]:
+                return 0
+            my_id.append( self.ids[ cpart ][ kwargs[cpart] ] )
+        my_id = [ tuple(my_id) ]
+        
+        return self.counts[ cname ][ tuple(zip(*my_id)) ][0]
+    
+    def items(self, typ):
+        return sorted(self.ids[typ])
+    
+    def delete(self, typ, which):        
+        for cnames in self.counts:
+            if typ not in cnames:
+                continue
+                
+        del_idx = set(self.ids[typ][i] for i in which)
+        del_idx_np = np.array(sorted(del_idx))
+        keep_idx = set(self.ids[typ].values()).difference(del_idx)
+        keep_idx_np = np.array(sorted(keep_idx))
+        
+        print(f"Deleting {len(del_idx)/1e6:0.1f}M. Leaving {len(keep_idx):,}.")
+
+        new_ids = {}
+        new_id_i = 0
+        for t,i in sorted( self.ids[typ].items(), key=lambda x:x[1] ):
+            if i not in keep_idx:
+                continue
+
+            new_ids[t] = new_id_i
+            new_id_i += 1
+            
+        self.ids[typ] = new_ids
+        
+        for ckey, c in self.counts.items():
+            if typ not in ckey:
+                continue
+
+            cur_count = self.counts[ckey]
+            del_index = ckey.index( typ )
+            self.counts[ckey] = np.delete( cur_count, del_idx_np, axis=del_index )
+        
+    def prune_zeros(self):
+        typs = self.ids.keys()
+        
+        for typ in typs:
+            base_count = self.counts[(typ,)]
+            zero_idx = [ ti for ti,c in enumerate(base_count) if c == 0 ]
+            if not len(zero_idx):
+                continue
+
+            del_start = min(zero_idx)
+
+            del_cols = np.arange(del_start, base_count.shape[0])
+
+            for ckey, c in self.counts.items():
+                if typ not in ckey:
+                    continue
+
+                cur_count = self.counts[ckey]
+                del_index = ckey.index( typ )
+                self.counts[ckey] = np.delete( cur_count, del_cols, axis=del_index )
+                
+    def save_counts(self, name):
+        import pickle
+
+        with open(f'{name}.counts.pickle', 'wb') as outf:
+            pickle.dump(self.counts, outf)
+
+        with open(f'{name}.ids.pickle', 'wb') as outf:
+            pickle.dump(self.ids, outf)
+            
+    def summarize(self):
+        print( [(k, c.shape) for k,c in self.counts.items()])

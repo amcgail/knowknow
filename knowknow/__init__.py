@@ -32,6 +32,7 @@ from .utility import *
 
 # this uses some imports from here...
 from .datastore_cnts import *
+from .datastore_cnts.counter import counter
 # from .datastore_sql import *
 
 from .code_sharing import *

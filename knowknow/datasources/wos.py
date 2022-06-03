@@ -1,4 +1,5 @@
 from .. import *
+from ..datastore_cnts.representations import wos_doc
 
 from csv import DictReader
 # This cell ensures there are not overflow errors while importing large CSVs
@@ -17,6 +18,124 @@ while True:
         break
     except OverflowError:
         maxInt = int(maxInt / 10)
+
+
+
+def _csv_iterator(base):
+    
+    base = Path(base)
+    assert base.exists()
+
+    # processes WoS txt output files one by one, counting relevant cooccurrences as it goes
+    dcount = 0
+    files = list(base.glob("**/*.txt"))
+    for i, f in enumerate(files):
+        
+        try:
+            with f.open(encoding='utf8', newline='') as pfile:
+                r = DictReader(pfile, delimiter='\t', quoting=3)
+                rows = list(r)
+        except UnicodeDecodeError:
+            print(f"Cannot load file! {f.name}. Skipping.")
+            continue
+
+        if i % 50 == 0:
+            print("File %s/%s: %s" % (i, len(files), f.name))
+            print("Document: %s" % dcount)
+
+        for r in rows:
+            yield r
+            dcount += 1
+
+def _txt_iterator(base):
+
+    base = Path(base)
+    assert base.exists()
+
+    dcount = 0
+    files = list(base.glob("**/*.txt"))
+    jcount = defaultdict(int)
+    for i,fn in enumerate(files):
+        with fn.open(encoding='utf8') as inf:
+            recs = inf.read()
+            recs = recs.split("\n\n")
+
+            if i % 50 == 0:
+                print("File %s/%s: %s" % (i, len(files), fn.name))
+                print("Document: %s" % dcount)
+
+            for r in recs:
+
+                ry = {}
+                
+                myparts = []
+                lastkey = None
+                for l in r.split("\n"):
+                    key,val = l[:2], l[3:]
+                    key = key.replace("\ufeff","")
+                    val = val.strip()
+                    
+                    if key != "  " and key != lastkey:
+                        if len(myparts):
+                            if lastkey in ry:
+                                print(r)
+                                raise
+                            ry[lastkey] = ";".join(myparts)
+                            myparts = []
+                        
+                        lastkey = key              
+
+                    myparts.append(val)
+
+                if len(myparts):
+                    ry[lastkey] = ";".join(myparts)
+                    
+                if 'SO' not in ry:
+                    continue
+                
+                jcount[ry['SO'].lower()] += 1
+
+                yield ry
+                dcount += 1
+
+def doc_iterator(base, type, limit=None):
+    it = None
+    if type == 'csv':
+        it = _csv_iterator(base)
+    elif type == 'txt':
+        it = _txt_iterator(base)
+        
+    yielded = 0
+
+    for i, r in enumerate(it):
+
+        if 'DT' not in r:
+            continue
+
+        if r['DT'] != "Article":
+            continue
+
+        if r['PY'] is None:
+            continue
+
+        try:
+            int(r['PY'])
+        except ValueError:
+            print(r)
+            raise
+        
+        if 'AU' not in r:
+            continue
+        if 'CR' not in r:
+            continue
+
+        yield wos_doc(r)
+
+        yielded += 1
+        if limit is not None and yielded > limit:
+            break
+
+
 
 
 class counter:
@@ -50,6 +169,16 @@ class counter:
         self.ind = defaultdict(lambda: defaultdict(int))
         self.track_doc = defaultdict(lambda: defaultdict(set))
         self.doc = defaultdict(lambda: defaultdict(int))
+
+    def doc_iterator(self):
+        it = doc_iterator(base=self.wos_txt_base, type=self.wos_type)
+
+        for doc in it:
+            # implements the journals filter!
+            if self.journals_filter is not None and doc.journal.lower() not in self.journals_filter:
+                continue
+
+            yield doc
 
     def count_cocitations(self):
 
@@ -95,139 +224,6 @@ class counter:
         self.doc[space][term] = len(self.track_doc[space][term])
         # update ind count
         self.ind[space][term] += 1
-
-    def _csv_iterator(self):
-        
-        # processes WoS txt output files one by one, counting relevant cooccurrences as it goes
-        self.dcount = 0
-        files = list(self.wos_txt_base.glob("**/*.txt"))
-        for i, f in enumerate(files):
-            
-            try:
-                with f.open(encoding='utf8', newline='') as pfile:
-                    r = DictReader(pfile, delimiter='\t', quoting=3)
-                    rows = list(r)
-            except UnicodeDecodeError:
-                print(f"Cannot load file! {f.name}. Skipping.")
-                continue
-
-            if i % 50 == 0:
-                print("File %s/%s: %s" % (i, len(files), f.name))
-                print("Document: %s" % self.dcount)
-                print("Citations: %s" % len(self.doc['c']))
-
-            if i > 10:
-                if self.debug:
-                    break
-
-            for r in rows:
-                yield r
-                self.dcount += 1
-
-    def _txt_iterator(self):
-
-        self.dcount = 0
-        files = list(Path(self.wos_txt_base).glob("**/*.txt"))
-        jcount = defaultdict(int)
-        for i,fn in enumerate(files):
-            with fn.open(encoding='utf8') as inf:
-                recs = inf.read()
-                recs = recs.split("\n\n")
-
-                if i % 50 == 0:
-                    print("File %s/%s: %s" % (i, len(files), fn.name))
-                    print("Document: %s" % self.dcount)
-                    print("Citations: %s" % len(self.doc['c']))
-                    print("Journals: %s" % Counter(dict(jcount)).most_common(15))
-
-                if i > 10:
-                    if self.debug:
-                        break
-
-                for r in recs:
-
-                    ry = {}
-                    
-                    myparts = []
-                    lastkey = None
-                    for l in r.split("\n"):
-                        key,val = l[:2], l[3:]
-                        key = key.replace("\ufeff","")
-                        val = val.strip()
-                        
-                        if key != "  " and key != lastkey:
-                            if len(myparts):
-                                if lastkey in ry:
-                                    print(r)
-                                    raise
-                                ry[lastkey] = ";".join(myparts)
-                                myparts = []
-                            
-                            lastkey = key              
-
-                        myparts.append(val)
-
-                    if len(myparts):
-                        ry[lastkey] = ";".join(myparts)
-                      
-                    if 'SO' not in ry:
-                        continue
-                    
-                    jcount[ry['SO'].lower()] += 1
-
-                    yield ry
-                    self.dcount += 1
-
-    def _txt_iterator_shit_package(self):
-        self.dcount = 0
-
-        import wosfile
-        files = Path("C:/Users/amcga/Downloads/wos.stratified.polysci").glob("**/*.txt")
-        for i, rec in enumerate( wosfile.records_from(files) ):
-            
-            if i % 50 == 0:
-                print("Document: %s" % self.dcount)
-                print("Citations: %s" % len(self.doc['c']))
-
-            yield rec
-            self.dcount += 1
-
-    def doc_iterator(self):
-        it = None
-        if self.wos_type == 'csv':
-            it = self._csv_iterator()
-        elif self.wos_type == 'txt':
-            it = self._txt_iterator()
-            
-        for i, r in enumerate(it):
-
-            if 'DT' not in r:
-                continue
-
-            if r['DT'] != "Article":
-                continue
-
-            if r['PY'] is None:
-                continue
-
-            try:
-                int(r['PY'])
-            except ValueError:
-                print(r)
-                raise
-            
-            if 'AU' not in r:
-                continue
-            if 'CR' not in r:
-                continue
-
-            # REMEMBER THIS! journals are in lowercase... not case sensitive
-
-            # implements the journals filter!
-            if self.journals_filter is not None and r['SO'].lower() not in self.journals_filter:
-                continue
-
-            yield wos_doc(r)
 
     def count_citation(self, doc, ref):
 
@@ -312,6 +308,19 @@ class counter:
         for k, count in self.ind.items():
             varname = "ind ___ %s" % k
             db.save_variable(varname, dict(count))
+
+
+    def count_coauthors(self):
+        
+        for doc in self.doc_iterator():
+            for a1 in doc.citing_authors:
+                for a2 in doc.citing_authors:
+                    if a1 != a2:
+                        self.cnt((a1, a2), 'fa1.fa2', doc.uid)
+
+        print("Finished coauthor logging!")
+
+
 
     def count_ages(self):
 
@@ -406,4 +415,5 @@ class counter:
         if self.RUN_EVERYTHING:
             self.count_ages()
             self.count_cocitations()
+            self.count_coauthors()
         self.save_counters()
