@@ -60,9 +60,11 @@ class wos_doc:
                 continue
 
             f, l = xsp[1], xsp[0]
-            f = f[0]  # take only first initial of first name
-
-            yield "%s, %s" % (l, f)
+            if len(f):
+                f = f[0]  # take only first initial of first name
+                yield "%s, %s" % (l, f)
+            else:
+                yield l
 
 
 class wos_ref:

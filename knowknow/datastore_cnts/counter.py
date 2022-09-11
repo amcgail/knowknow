@@ -396,9 +396,15 @@ class counter:
             fn = self.name
             ctf = f'{fn}.counts.pickle'
             idf = f'{fn}.ids.pickle'
-
+        
+            ex1,ex2 = False,False
+            try:
+                ex1,ex2 = Path(ctf).exists(), Path(idf).exists()
+            except OSError: # wtf windows??
+                pass
+                    
             if self.typ == 'idmap':
-                if not Path(idf).exists():
+                if not ex2:
                     print("no id.pickle file // setting typ='ddict'")
                     typ = 'ddict'
 
