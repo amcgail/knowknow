@@ -1,3 +1,4 @@
+from email.policy import default
 from . import *
 
 __all__ = [
@@ -30,39 +31,65 @@ def _normalize(mat, axis=0):
 # colormaps...
 # https://matplotlib.org/3.1.0/tutorials/colors/colormaps.html
 
-def matrix(db, typ='docs', plot=False, norm=None, trans=False, includeComplement=False, **kwargs):
+def matrix(db, 
+    typ='docs', plot=False, result=None, 
+    norm=None, trans=False, includeComplement=False, 
+    plt_kwargs={}, remove_cohorts=None, filt=None, 
+    **kwargs
+):
+    
+    from collections import OrderedDict
 
-    assert(isinstance(db, Dataset))
+    assert(isinstance(db, Dataset) or isinstance(db, datastore_cnts.counter.counter))
 
-    cnt = db.by( *list(kwargs) )
+    if plot and result is None:
+        result = False
+    elif result is None:
+        result = True
 
-    # by1=range(35,50), by2=range(10,20)
-    if len(list(kwargs)) != 2:
-        raise Exception("matrix with dim != 2 not supported")
+    if 'by' not in kwargs:
 
-    if typ == 'docs':
-        c = cnt.docs
-    elif typ == 'cits':
-        c = cnt.cits
+        # by1=range(35,50), by2=range(10,20)
+        if len(list(kwargs)) != 2:
+            raise Exception("matrix with dim != 2 not supported")
+
+        keys = key1,key2 = sorted(kwargs)
+        by1 = kwargs[key1]
+        by2 = kwargs[key2]
+
     else:
-        raise Exception("wtf... docs or cits bro")
 
-    key1, key2 = sorted(kwargs)
-    by1 = kwargs[key1]
-    by2 = kwargs[key2]
+        # thought about making ordering a thing in general,
+        # but it'll break all my old code...
+
+        by = kwargs['by']
+        assert len(by) == 2
+        if type(by) in {dict,OrderedDict}:
+            keys = key1,key2 = list(by)
+            by1,by2 = by.values()
+        else:
+            raise("could be something here")
+
 
     import numpy as np
     from collections import defaultdict
 
     def mk_array():
         for a1 in by1:
-            my_series = np.array([c[(a1, a2)] for a2 in by2])
+            my_series = np.array([
+                db(**{key1:a1, key2:a2}) 
+                if (filt is None or filt(a1,a2))
+                else 0
+                for a2 in by2 
+            ])
 
             if includeComplement:
                 out = 0
-                for (pp1, pp2), count in c.items():
+                for (pp1, pp2), count in db.items(key1, key2):
                     # to account for a temporary bug
                     if pp1 < 0 or pp2 < 0:
+                        continue
+                    if filt is not None and not filt(pp1,pp2):
                         continue
 
                     # skip what's already included
@@ -81,9 +108,11 @@ def matrix(db, typ='docs', plot=False, norm=None, trans=False, includeComplement
             cLast = defaultdict(int)
 
             outside_both = 0
-            for (pp1, pp2),count in c.items():
+            for (pp1, pp2),count in db.items(key1, key2):
                 # to account for a temporary bug
                 if pp1 < 0 or pp2 < 0:
+                    continue
+                if filt is not None and not filt(pp1,pp2):
                     continue
 
                 # skip what's already included
@@ -102,13 +131,44 @@ def matrix(db, typ='docs', plot=False, norm=None, trans=False, includeComplement
 
 
     mat = np.array(list(mk_array()))
+    print(mat)
+
+    if remove_cohorts is not None:
+        assert(type(remove_cohorts) == dict)
+        assert(len(list(remove_cohorts)) == 1)
+        assert('fy' in keys)
+
+        k,v = list(remove_cohorts.items())[0]
+        assert k in keys
+        if k == key1:
+            for jj in v: # loop over cohorts
+                # loop over years
+                for y in by2:
+                    if y < jj:
+                        continue
+
+                    if y-jj >= max(by1)-1:
+                        continue
+
+                    mat[y-jj,y-min(by2)] = 0 # remove em
+        if k == key2:
+            for jj in v: # loop over cohorts
+                # loop over years
+                for y in by1:
+                    if y < jj:
+                        continue
+
+                    if y-jj >= max(by1)-1:
+                        continue
+
+                    mat[y-min(by1),y-jj] = 0 # remove em
 
     if norm is not None:
         from . import matrix_normalize
-        if norm not in kwargs:
+        if norm not in keys:
             raise Exception('norm should be the axis along which you want to normalize')
 
-        norm_i = sorted(kwargs).index(norm)
+        norm_i = keys.index(norm)
         mat = matrix_normalize(mat, axis=norm_i)
 
     if trans:
@@ -117,10 +177,17 @@ def matrix(db, typ='docs', plot=False, norm=None, trans=False, includeComplement
     if plot:
         from . import plt
         fig = plt.figure(figsize=(20, 4))  # plt.subplots()#
-        plt.imshow(mat, interpolation='nearest', cmap=plt.cm.hsv)
-        # IMS.cmap.set_under('yellow')
-        # IMS.cmap.set_over('orange')
-        plt.colorbar()
+
+        default_plt_args = {
+            'vmin':max(0,np.quantile(mat, 0.1)),
+            'vmax':min(1,np.quantile(mat, 0.9))
+        }
+
+        plt_kwargs = dict(default_plt_args, **plt_kwargs)
+
+        plt.imshow(mat, interpolation='nearest', 
+            **plt_kwargs
+        )
 
         if trans:
             xtick = by1
@@ -149,7 +216,8 @@ def matrix(db, typ='docs', plot=False, norm=None, trans=False, includeComplement
         else:
             plt.xlabel(key2)
             plt.ylabel(key1)
-    else:
+    
+    if result:
         return mat
 
 def yearly_counts_grid(names, dataset, myname=None,
