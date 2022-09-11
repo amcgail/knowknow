@@ -29,7 +29,7 @@ def top_decade_stratified(dataset, what, yRange=None, percentile=None, topN=None
     ):
 
         count_in_range = defaultdict(int)
-        for (item, fy), count in dict(dataset.items(what, 'fy')).items():
+        for (item, fy), count in dataset.items(what, 'fy'):
             if count == 0:
                 continue
             if RANGE_END >= fy >= RANGE_START:

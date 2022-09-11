@@ -4,8 +4,8 @@ from ..datasources.wos import doc_iterator
 import pickle
 
 
-
-
+#from scipy.sparse import lil_matrix
+#from scipy.sparse import DOK
 
 
 from csv import DictReader
@@ -368,8 +368,6 @@ if False:
             return print(what)
 
 
-from scipy.sparse import lil_matrix
-from sparse import DOK
 class counter:
     """
     The counter class manages coocurrence counts.

@@ -283,6 +283,7 @@ def get_yn(prompt):
 
 
 # this might just be putting an unnecessary # of steps between the code and its result!
+# and it's currently out of date with how the .counter class works?
 class Dataset:
 
     attr_cache = {}
