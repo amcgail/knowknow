@@ -1,6 +1,7 @@
-from .. import defaultdict, Path
+from .. import defaultdict, Path, np
 from .count_cache import Dataset
 from ..datasources.wos import doc_iterator
+import pickle
 
 
 
@@ -335,7 +336,40 @@ class wos:
             self.count_coauthors()
         self.save_counters()
 
+def matches(name):
+    fns = Path('.').glob(f"{name}*.pickle")
+    fns = [x.name for x in fns]
+    fns = [x.replace(".counts.pickle","") for x in fns]
+    fns = [x.replace(".ids.pickle","") for x in fns]
+    fns = set(fns)
+    return fns
+    
+if False:
 
+
+    class counters:
+
+        def __init__(self, name):
+                    
+            fns = Path('.').glob(f"{name}*.pickle")
+            fns = [x.name for x in fns]
+            fns = [x.replace(".counts.pickle","") for x in fns]
+            fns = [x.replace(".ids.pickle","") for x in fns]
+            fns = set(fns)
+
+            print("Loading", ", ".join(fns))
+
+            self.counters = {
+                fn: counter(fn)
+                for fn in fns
+            }
+
+        def __getattribute__(self, what):
+            return print(what)
+
+
+from scipy.sparse import lil_matrix
+from sparse import DOK
 class counter:
     """
     The counter class manages coocurrence counts.
@@ -346,116 +380,347 @@ class counter:
     Initiate a counter with its name, 
         which identifies it in the Dataset.
     """
-    def __init__(self, name=None):
+    def __init__(self, name=None, typ="ddict", paradigm='one_file'):
         import pickle
-        self.name = name
-        
-        ctf = f'{name}.counts.pickle'
-        idf = f'{name}.ids.pickle'
-        
-        ex = False
-        try:
-            ex = Path(ctf).exists()
-        except OSError: # wtf windows??
-            pass
 
-        if ex:
-            print(f'Loading {name} from disk...')
-            with open(ctf, 'rb') as inf:
-                self.counts = pickle.load(inf)
-            with open(idf, 'rb') as inf:
-                self.ids = pickle.load(inf)
+        self.name = name
+        self.typ = typ
+        self.paradigm = paradigm
+
+        self._sortsave = {}
+        
+        self.counts = {}
+        self.ids = {}
+        self.names = {}
+
+
+        if self.name is not None:
+            fn = self.name
+            ctf = f'{fn}.counts.pickle'
+            idf = f'{fn}.ids.pickle'
+        
+            ex1,ex2 = False,False
+            try:
+                ex1,ex2 = Path(ctf).exists(), Path(idf).exists()
+            except OSError: # wtf windows??
+                pass
+                    
+            if self.typ == 'idmap':
+                if not ex2:
+                    print("no id.pickle file // setting typ='ddict'")
+                    typ = 'ddict'
+
+                with open(idf, 'rb') as inf:
+                    self.ids = pickle.load(inf)
+
+                self.names = {
+                    cname: {i:n for n,i in myids.items()}
+                    for cname,myids in self.ids.items()
+                }
+
+            if self.paradigm == 'one_file':
                 
-        else:
-            if name is not None:
-                print(f'Blank counter with name {name}')
+                if Path(ctf).exists():
+                    print(f'Loading {name} from disk...')
+                    with open(ctf, 'rb') as inf:
+                        self.counts = pickle.load(inf)
+
+                else:
+                    ms = matches(self.name)
+                    if len(ms):
+                        print('Did you mean ', ", ".join(ms))
+                    raise Exception('file not found')
+
+            elif self.paradigm == 'many_file':
+                # don't load anything, it's lazy loaded now...
+                pass
+
             else:
-                print(f'Blank counter with no name')
-                
-            self.counts = {}
-            self.ids = {}
+                raise Exception("use an acceptable paradigm. this will bust code")
+
+
+    def no_duplicate(self): # this doesn't copy the data structures...
+        c = counter()
+        c.counts = self.counts
+        c.ids = self.ids
+        c.names = self.names
+        return c
+
+    def loadinit(self, c):
+        c = tuple(sorted(c))
+
+        if c not in self.counts:
+
+            # lazy loading for multi-file setup
+            if self.paradigm == 'many_file' and self.name is not None:
+                typ = '.'.join(c)
+                ctf = f'{self.name}.counts~{typ}.pickle'
+                if Path(ctf).exists():
+                    with open(ctf, 'rb') as inf:
+                        self.counts[c] =  pickle.load(inf)                
+                    return
+
+            #self.counts[c] = np.zeros( tuple([100]*len(c)), dtype=object ) # initialize small N-attrs sized array... agh np.int16 overflows easily... gotta upgrade to object?
+            #self.counts[c] = DOK( tuple([100]*len(c)) )
+            # init some zeros if it doesn't exist
+            self.counts[c] = defaultdict(int)
+        
                 
     ###############   FOR COUNTING   ####################
     
-    def count(self, info, combinations=[]):
+    def count(self, info, combinations=[], scale=1):
         """
         `info` is a dictionary of information about the entity.
         `combinations` is a list of the combinations of keys in `info` which the counter should count
         """
-        ids = {
-            k:self.idof( k, v )
-            for k,v in info.items()
-        }
-        
-        for c in combinations:
-            # dim = len(c)
-            # cname = ".".join(sorted(c))
-            assert(all( x in info for x in c ))
-            
-            if c not in self.counts:
-                self.counts[c] = np.zeros( tuple([10]*len(c)), dtype=object ) # initialize small N-attrs sized array... agh np.int16 overflows easily... gotta upgrade to object?
 
-            self.counts[c][tuple( ids[ck] for ck in c )] += 1
+        if False: # put this in an except phrase somewhere if you really want it here
+            ask = set(y for x in combinations for y in x)
+            have = set(info)
+
+            if not ask.issubset( have ):
+                ask_s = ", ".join( sorted( ask ) )
+                have_s = ", ".join( sorted( have ) )
+                raise Exception(f'Asked to count {ask_s}, have {have_s}.')
+
+        if self.typ == "idmap":
+
+            # do once for many combos
+            ids = {
+                k:self.idof( k, v )
+                for k,v in info.items()
+            }
+            
+            for c in combinations:
+                if c not in self._sortsave:
+                    self._sortsave[c] = tuple(sorted(c)) # consistency
+
+                c = self._sortsave[c]
+                # dim = len(c)
+                # cname = ".".join(sorted(c))
+                
+                self.loadinit(c)
+                self.counts[c][ tuple( ids[ck] for ck in c ) ] += scale
+
+        elif self.typ == "ddict":
+
+            for c in combinations:
+                # dim = len(c)
+                # cname = ".".join(sorted(c))
+                
+                if c not in self._sortsave:
+                    self._sortsave[c] = tuple(sorted(c)) # consistency
+
+                c = self._sortsave[c]
+                # dim = len(c)
+                # cname = ".".join(sorted(c))
+                
+                self.loadinit(c)
+                self.counts[c][ tuple( info[ck] for ck in c ) ] += scale
 
     # returns id, or makes a new one.
     # often needs to expand the arrays
-    def idof(self, kind, name):       
-        
-        if kind not in self.ids:
-            self.ids[kind] = {}
+    def idof(self, kind, name):
             
         # if you've never seen it, add this ID to the dict
         if name not in self.ids[kind]:
             new_id = len(self.ids[kind])
             self.ids[kind][name] = new_id
+            self.names[kind][new_id] = name
             
-            # now have to expand all the np arrays...
-            # have to loop through all series, because you have to expand fy.ty.t as well as t :O
-            for k in self.counts:
-                if not kind in k: # remember k is a tuple... kind is a string representing a type of count
-                    continue
+            if False:
+                # now have to expand all the np arrays...
+                # but only if they're arrays!
+                # have to loop through all series, because you have to expand fy.ty.t as well as t :O
+                for k in self.counts:
+                    if not kind in k: # remember k is a tuple... kind is a string representing a type of count
+                        continue
+                        
+                    arr_index = k.index(kind)
                     
-                arr_index = k.index(kind)
-                
-                # no need to pad if it's already big enough
-                current_shape = self.counts[k].shape[arr_index]
-                if current_shape >= new_id+1:
-                    continue
+                    """
+                    # no need to pad if it's already big enough
+                    current_shape = self.counts[k].shape[arr_index]
+                    if current_shape >= new_id+1:
+                        continue
+                    """
+                        
+                    """
+                    self.counts[k] = np.pad( 
+                        self.counts[k], 
+
+                        # exponential growth :) 
+                        # this (current_shape*0.25) limits the number of pad calls we need.
+                        # these become expensive if we do them all the time
+                        [(0,int(current_shape*0.25)*(dim==arr_index)) for dim in range(len(k))], 
+
+                        mode='constant', 
+                        constant_values=0 
+                    )
+                    """
+
+                    """
+                    self.counts[k].resize((
+                        current_shape*( 1 + 0.25*(dim==arr_index))
+                        for dim in range(len(k))
+                    ))
+                    """
                     
-                self.counts[k] = np.pad( 
-                    self.counts[k], 
-
-                    # exponential growth :) 
-                    # this (current_shape*0.25) limits the number of pad calls we need.
-                    # these become expensive if we do them all the time
-                    [(0,int(current_shape*0.25)*(dim==arr_index)) for dim in range(len(k))], 
-
-                    mode='constant', 
-                    constant_values=0 
-                )
+                    """
+                    self.counts[k].shape = tuple(
+                        int( current_shape*( 1 + 0.25*(dim==arr_index)) )
+                        for dim in range(len(k))
+                    )
+                    """
             
         return self.ids[kind][name]
-        
-          
+
+    def nameof(self, kind, id):
+        return self.names[kind][id]
                 
                 
     ###############   FOR RECALL   ####################
         
     def __call__(self, *args, **kwargs):
         cname = tuple(sorted(kwargs.keys()))
+        self.loadinit(cname)
+        noneKeys = {k for k,v in kwargs.items() if v is None}
+        notNoneKeys = {k for k,v in kwargs.items() if v is not None}
+
+        if len(noneKeys):
+            def gen():
+                        
+                #wh = np.where( self.counts[cname] > 0 )
+                for parts in self.counts[cname]:
+                    myc = self.counts[cname][parts]
+                    nameparts = {kind:self.names[kind][p] for kind,p in zip(cname, parts)}
+
+                    bugger = False
+                    # add up all the parts that make sense...
+                    for k in notNoneKeys:
+                        if nameparts[k] != kwargs[k]:
+                            bugger=True
+                            break
+                    if bugger:
+                        continue
+
+                    ret = {
+                        k: nameparts[k]
+                        for k in noneKeys
+                    }
+
+                    ret['count'] = myc
+                    yield ret
+
+            import pandas as pd
+            final = pd.DataFrame(list(gen()))
+            final = final.sort_values(sorted(noneKeys))
+            return final
         
-        # just figuring out what the proper index in the matrix is...
-        my_id = []
-        for cpart in cname:
-            if kwargs[cpart] not in self.ids[ cpart ]:
-                return 0
-            my_id.append( self.ids[ cpart ][ kwargs[cpart] ] )
-        my_id = [ tuple(my_id) ]
+        if self.typ == "idmap":
+            # just figuring out what the proper index in the matrix is...
+            my_id = []
+            for cpart in cname:
+                if kwargs[cpart] not in self.ids[ cpart ]:
+                    return 0
+                my_id.append( self.ids[ cpart ][ kwargs[cpart] ] )
+
+            my_id = tuple(my_id)
+
+            return self.counts[ cname ][ my_id ]
+
+        elif self.typ == "ddict":
+
+            return self.counts[cname][tuple(
+                kwargs[cn] for cn in cname
+            )]
+
         
-        return self.counts[ cname ][ tuple(zip(*my_id)) ][0]
+        
+
+    def keys(self, typ):
+        return list(self.names[typ])
     
-    def items(self, typ):
-        return sorted(self.ids[typ])
+    def items(self, *typs):
+        from .. import make_cross
+        typsk = tuple(sorted(typs))
+        self.loadinit(typsk)
+
+        for item, c in self.counts[ typsk ].items():
+            
+            if False:
+                t = make_cross({
+                    t: self.names[t][ item[ typsk.index(t) ] ] 
+                    for ti,t in enumerate(typs)
+                })
+            else:
+                if self.typ == 'idmap':
+                    t = tuple([
+                        self.names[t][ item[ typsk.index(t) ] ] 
+                        for ti,t in enumerate(typs)
+                    ])
+                elif self.typ == 'ddict':
+                    t = tuple([
+                        item[ typsk.index(x) ]
+                        for x in typs
+                    ])
+
+                else:
+                    raise Exception("invalid typ")
+
+            if len(t) == 1:
+                t = t[0]
+            yield (t, c)
+
+        return
+
+        # this also should work fine, but is a bit complex
+        from itertools import product
+        typs = sorted(typs)
+        parts = {
+            typ: sorted(self.ids[typ].items())
+            for typ in typs
+        }
+
+        for item in product(*[parts[t] for t in typs]):
+            print(item)
+            if self( **dict(zip(typs, [x[0] for x in item])) ) > 0:
+                yield [x[0] for x in item]
+
+
+    def trend(self, dtype, name, years):
+        from .time_trend import TimeTrend
+        return TimeTrend(
+            dtype = dtype,
+            name = name,
+            dataset = self,
+            years = years
+        )
+
+    def drop(self, typ):
+        """
+        Deletes all counts of a specific type.
+        Useful to conserve memory
+        """
+
+        del self.counts[typ]
+        del self.names[typ]
+        del self.ids[typ]
+
+    def dropall(self, typ):
+        """
+        Drops anything having to do with a certain type...
+        """
+
+        todrop = []
+        for k in self.counts:
+            if any(kp == typ for kp in k):
+                todrop.append(k)
+        
+        for td in todrop:
+            self.drop(td)
+
+
     
     def delete(self, typ, which):        
         for cnames in self.counts:
@@ -509,14 +774,30 @@ class counter:
                 del_index = ckey.index( typ )
                 self.counts[ckey] = np.delete( cur_count, del_cols, axis=del_index )
                 
-    def save_counts(self, name):
-        import pickle
+    def save(self, name=None, typ=None):
 
-        with open(f'{name}.counts.pickle', 'wb') as outf:
-            pickle.dump(self.counts, outf)
+        if name is None:
+            if self.name is None:
+                raise Exception('please give a name for the dataset')
+            else:
+                name = self.name
 
-        with open(f'{name}.ids.pickle', 'wb') as outf:
-            pickle.dump(self.ids, outf)
+        if self.paradigm == 'one_file':
+            with open(f'{name}.counts.pickle', 'wb') as outf:
+                pickle.dump(self.counts, outf)
+
+            with open(f'{name}.ids.pickle', 'wb') as outf:
+                pickle.dump(self.ids, outf)
+
+        elif self.paradigm == 'many_file':
+            for typ, cc in self.counts.items():
+                typ = '.'.join(sorted(typ))
+                with open(f'{name}.counts~{typ}.pickle', 'wb') as outf:
+                    pickle.dump(cc, outf)
+
+            if self.typ == 'idmap':
+                with open(f'{name}.ids.pickle', 'wb') as outf:
+                    pickle.dump(self.ids, outf)
             
     def summarize(self):
         print( [(k, c.shape) for k,c in self.counts.items()])

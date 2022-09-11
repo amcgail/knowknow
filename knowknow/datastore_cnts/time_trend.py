@@ -103,12 +103,11 @@ class ttDF:
 
 class TimeTrend:
     
-    def __init__(self, dataset, dtype, name):
+    def __init__(self, dataset, dtype, name, years):
         self.dataset = dataset
         self.dtype = dtype
 
-        self.data_start = self.dataset['RELIABLE_DATA_STARTS_HERE']
-        self.data_end = self.dataset['RELIABLE_DATA_ENDS_HERE']
+        self.data_start, self.data_end = years
         
         self._cumsum = None
         self._c = None
@@ -161,8 +160,7 @@ class TimeTrend:
 
     def load_c(self):
         # these counts act as the data for all subsequent computations
-        my_by_y = self.dataset.by(self.dtype, 'fy').cits
-        all_by_y = self.dataset.by('fy').cits
+        all_by_y = defaultdict( int, self.dataset.items('fy') )
 
         self._c = defaultdict(lambda:None)
         self._cp = defaultdict(lambda:None)
@@ -174,9 +172,9 @@ class TimeTrend:
             self.data_start,
                 self.data_end + 1
         ):
-            cy = make_cross(**{self.dtype:self.name, 'fy':YY})
-            self._c[YY] = my_by_y[cy]
-            self._cp[YY] = my_by_y[cy] / all_by_y[(YY,)] if all_by_y[(YY,)] > 0 else 0
+            cc = self.dataset(**{self.dtype:self.name, 'fy':YY})
+            self._c[YY] = cc
+            self._cp[YY] = cc / all_by_y[YY] if all_by_y[YY] > 0 else 0
 
     def load_d(self):
         # these counts act as the data for all subsequent computations

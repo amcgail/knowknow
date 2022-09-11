@@ -29,6 +29,8 @@ def _csv_iterator(base):
     # processes WoS txt output files one by one, counting relevant cooccurrences as it goes
     dcount = 0
     files = list(base.glob("**/*.txt"))
+    fprintskip = max( int((len(files) / 20)//1), 1 )
+
     for i, f in enumerate(files):
         
         try:
@@ -39,7 +41,7 @@ def _csv_iterator(base):
             print(f"Cannot load file! {f.name}. Skipping.")
             continue
 
-        if i % 50 == 0:
+        if (i+1) % fprintskip == 0:
             print("File %s/%s: %s" % (i, len(files), f.name))
             print("Document: %s" % dcount)
 
@@ -55,12 +57,15 @@ def _txt_iterator(base):
     dcount = 0
     files = list(base.glob("**/*.txt"))
     jcount = defaultdict(int)
+    
+    fprintskip = max( int((len(files) / 20)//1), 1 )
+
     for i,fn in enumerate(files):
         with fn.open(encoding='utf8') as inf:
             recs = inf.read()
             recs = recs.split("\n\n")
 
-            if i % 50 == 0:
+            if (i+1) % fprintskip == 0:
                 print("File %s/%s: %s" % (i, len(files), fn.name))
                 print("Document: %s" % dcount)
 
@@ -98,6 +103,23 @@ def _txt_iterator(base):
                 yield ry
                 dcount += 1
 
+# some types of titles should be immediately ignored
+def title_looks_researchy(lt):
+    lt = lt.lower()
+    lt = lt.strip()
+
+    for x in ["book review", 'review essay', 'back matter', 'front matter', 'notes for contributors',
+              'publication received', 'errata:', 'erratum:']:
+        if x in lt:
+            return False
+
+    for x in ["commentary and debate", 'erratum', '']:
+        if x == lt:
+            return False
+
+    return True
+
+
 def doc_iterator(base, type, limit=None):
     it = None
     if type == 'csv':
@@ -127,6 +149,10 @@ def doc_iterator(base, type, limit=None):
         if 'AU' not in r:
             continue
         if 'CR' not in r:
+            continue
+
+        lt = r['TI'].lower()
+        if not title_looks_researchy(lt):
             continue
 
         yield wos_doc(r)

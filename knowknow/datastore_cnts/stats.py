@@ -2,7 +2,7 @@ from .. import defaultdict, np, pd
 
 __all__ = ['top_decade_stratified', 'births_deaths']
 
-def top_decade_stratified(dataset, what, percentile=None, topN=None, yRange=None, maxP=None, debug=True):
+def top_decade_stratified(dataset, what, yRange=None, percentile=None, topN=None, maxP=None, debug=True):
     if percentile is None and topN is None:
         print("Assuming top 1%. Use percentile or topN attributes")
         percentile = 0.01
@@ -10,7 +10,7 @@ def top_decade_stratified(dataset, what, percentile=None, topN=None, yRange=None
     if percentile is not None and topN is not None:
         raise Exception('one or the other... not both percentile or topN attributes')
 
-    if yRange is None:
+    if yRange is None and False:
         yRange = (
             dataset['RELIABLE_DATA_STARTS_HERE'],
             dataset['RELIABLE_DATA_ENDS_HERE']
@@ -29,11 +29,11 @@ def top_decade_stratified(dataset, what, percentile=None, topN=None, yRange=None
     ):
 
         count_in_range = defaultdict(int)
-        for cross, count in dataset.by(what, 'fy').cits.items():
+        for (item, fy), count in dict(dataset.items(what, 'fy')).items():
             if count == 0:
                 continue
-            if RANGE_END >= cross.fy >= RANGE_START:
-                count_in_range[getattr(cross, what)] += count
+            if RANGE_END >= fy >= RANGE_START:
+                count_in_range[item] += count
 
         counts = list(count_in_range.values())
         if not len(counts):
@@ -75,7 +75,7 @@ def top_decade_stratified(dataset, what, percentile=None, topN=None, yRange=None
             ))
 
     def getrow(name):
-        ret = dataset.trend(what, name).dump()
+        ret = dataset.trend(what, name, yRange).dump()
         ret['first_added'] = first_top[name]
         return ret
 

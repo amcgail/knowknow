@@ -81,7 +81,6 @@ def gen_tuple_template(keys: tuple):
     :return: a named tuple template
     ('e', 'q', 'w') -> <class '__main__.e_q_w'>
     """
-    # TODO: add caching
     return namedtuple('_'.join(keys), keys)
 
 
