@@ -353,7 +353,13 @@ class counter:
         ctf = f'{name}.counts.pickle'
         idf = f'{name}.ids.pickle'
         
-        if Path(ctf).exists():
+        ex = False
+        try:
+            ex = Path(ctf).exists()
+        except OSError: # wtf windows??
+            pass
+
+        if ex:
             print(f'Loading {name} from disk...')
             with open(ctf, 'rb') as inf:
                 self.counts = pickle.load(inf)
