@@ -214,6 +214,32 @@ class Determ:
 
 
 # adding some metadata capabilities
+if False:
+    class _dataset_metadata:
+        def __init__(self):
+            pass
+        def __getitem__(self, k):
+            if hasattr(env,'variable_dir'):
+                for fold in Path(env.variable_dir).glob("*"):
+                    if not fold.is_dir():
+                        continue
+
+                    attr_f = fold.joinpath('_attributes')
+                    if not attr_f.exists():
+                        attr_f.parent.mkdir(parents=True, exist_ok=True)
+                        with attr_f.open('wb') as dummy_f:
+                            pickle.dump({}, dummy_f)
+
+                    with attr_f.open('rb') as inf:
+                        try:
+                            mdata = pickle.load( inf )
+                            mdata['name'] = fold.name
+
+                            dataset_metadata[fold.name] = mdata
+                        except EOFError:
+                            continue 
+            else:
+                return None
 
 dataset_metadata = {}
 

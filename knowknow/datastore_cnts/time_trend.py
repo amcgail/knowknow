@@ -103,15 +103,19 @@ class ttDF:
 
 class TimeTrend:
     
-    def __init__(self, dataset, dtype, name, years):
+    def __init__(self, dataset, dtype, name, years=None):
         self.dataset = dataset
         self.dtype = dtype
 
-        self.data_start, self.data_end = years
+        if years is not None:
+            self.data_start, self.data_end = years
+        elif 'data_start' in self.dataset and 'data_end' in self.dataset:
+            self.data_start, self.data_end = self.dataset['data_start'], self.dataset['data_end']
+        else:
+            raise Exception("dataset has no `data_start` and `data_end` variables.\nset these or the years= parameter")
         
         self._cumsum = None
         self._c = None
-        self._d = None
 
         # this marks the end of adding non-saving variables to the class
         self.dict_filter = set(list(self.__dict__) + ["dict_filter"])  # save dict keys
@@ -137,19 +141,12 @@ class TimeTrend:
         if st not in cls.init_stack:
             cls.init_stack.append(st)
 
-    def cits(self, A=None, B=None):
+    def series(self, A=None, B=None):
         if A is None:
             A = self.data_start
         if B is None:
             B = self.data_end
         return [self.c[YY] for YY in range(A, B+1)]
-        
-    def docs(self, A=None, B=None):
-        if A is None:
-            A = self.data_start
-        if B is None:
-            B = self.data_end
-        return [self.d[YY] for YY in range(A, B+1)]
 
     def show(self):
         plt.plot(
@@ -165,9 +162,7 @@ class TimeTrend:
         self._c = defaultdict(lambda:None)
         self._cp = defaultdict(lambda:None)
 
-        #self._d = defaultdict(lambda:None)
-        #self._dp = defaultdict(lambda:None)
-
+        # grab the counts!
         for YY in range( 
             self.data_start,
                 self.data_end + 1
@@ -176,7 +171,7 @@ class TimeTrend:
             self._c[YY] = cc
             self._cp[YY] = cc / all_by_y[YY] if all_by_y[YY] > 0 else 0
 
-    def load_d(self):
+    def old_load_d(self):
         # these counts act as the data for all subsequent computations
         my_by_y = self.dataset.by(self.dtype, 'fy').docs
         all_by_y = self.dataset.by('fy').docs
@@ -204,19 +199,21 @@ class TimeTrend:
             self.load_c()
 
         return self._cp
-    @property
-    def d(self):
-        if self._d is None:
-            self.load_d()
+
+    if False:
+        @property
+        def d(self):
+            if self._d is None:
+                self.load_d()
+                
+            return self._d
+        @property
+        def dp(self):
+            if self._dp is None:
+                self.load_d()
+                
+            return self._dp
             
-        return self._d
-    @property
-    def dp(self):
-        if self._dp is None:
-            self.load_d()
-            
-        return self._dp
-        
 
 
     def simple_stats(self):
@@ -239,25 +236,27 @@ class TimeTrend:
         
         if self.dtype == 'c':
             # extracts some extra information from the name
-            
-            self.type = 'article'
-            if self.dataset['type'] == 'wos':
-                sp = self.name.split("|")
 
-                if not len(sp):
-                    print('Wtf',sp)
-                    raise
+            if 'type' in self.dataset:
+                
+                self.type = 'article'
+                if self.dataset['type'] == 'wos':
+                    sp = self.name.split("|")
 
-                try:
-                    self.pub = int(sp[1])
-                    self.type = 'article'
-                except ValueError:
-                    self.type = 'book'
-                    #self.pub = pubyears[self.name]
+                    if not len(sp):
+                        print('Wtf',sp)
+                        raise
 
-            elif self.dataset['type'] == 'jstor':
-                inparens = re.findall(r'\(([^)]+)\)', self.name)[0]
-                self.pub = int(inparens)
+                    try:
+                        self.pub = int(sp[1])
+                        self.type = 'article'
+                    except ValueError:
+                        self.type = 'book'
+                        #self.pub = pubyears[self.name]
+
+                elif self.dataset['type'] == 'jstor':
+                    inparens = re.findall(r'\(([^)]+)\)', self.name)[0]
+                    self.pub = int(inparens)
 
     def avg_between(self, A, B): # including B
         return self.sum_between(A, B) / (B-A+1)
@@ -272,8 +271,6 @@ class TimeTrend:
                 ):
                 self._cumsum.append( self._cumsum[-1] + self.c[YY] )
             self._cumsum = np.array(self._cumsum)
-
-
 
         if A < self.data_start:
             raise Exception("data begins at %s. cannot get %s" % (self.data_start, A))
@@ -299,3 +296,6 @@ class TimeTrend:
                           ):
         """
         return stats.births_deaths(self, **kwargs)
+
+    def __iter__(self):
+        return ( self.c[YY] for YY in range(self.data_start, self.data_end+1) )

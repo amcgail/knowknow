@@ -1,4 +1,4 @@
-from .. import defaultdict, Path, np
+from .. import defaultdict, Path, np, env
 from .count_cache import Dataset
 from ..datasources.wos import doc_iterator
 import pickle
@@ -336,8 +336,12 @@ class wos:
             self.count_coauthors()
         self.save_counters()
 
-def matches(name):
-    fns = Path('.').glob(f"{name}*.pickle")
+def matches(name, dir=None):
+    if dir is None:
+        dir='.'
+    dir = Path(dir)
+
+    fns = dir.glob(f"{name}*.pickle")
     fns = [x.name for x in fns]
     fns = [x.replace(".counts.pickle","") for x in fns]
     fns = [x.replace(".ids.pickle","") for x in fns]
@@ -378,7 +382,7 @@ class counter:
     Initiate a counter with its name, 
         which identifies it in the Dataset.
     """
-    def __init__(self, name=None, typ="ddict", paradigm='one_file'):
+    def __init__(self, name=None, typ="ddict", paradigm='one_file', home_dir=None):
         import pickle
 
         self.name = name
@@ -391,11 +395,32 @@ class counter:
         self.ids = {}
         self.names = {}
 
+        self.home_dir = home_dir
+        if self.home_dir is None:
+            self.home_dir = env.variable_dir
+        self.home_dir = Path(self.home_dir)
+        
+        self.path = self.home_dir.joinpath(self.name)
+        self.path.mkdir(exist_ok=True)
+
+        self.meta = {}
+        ap = self.path / '_attributes'
+        if ap.exists():
+            with ap.open('rb') as inf:
+                self.meta = pickle.load(inf)
+        else:
+            with ap.open('wb') as outf:
+                pickle.dump(self.meta, outf)
 
         if self.name is not None:
             fn = self.name
-            ctf = f'{fn}.counts.pickle'
-            idf = f'{fn}.ids.pickle'
+
+            if (self.home_dir / self.name).is_dir():
+                ctf = self.home_dir / self.name / f'counts.pickle'
+                idf = self.home_dir / self.name / f'ids.pickle'
+            else:
+                ctf = self.home_dir / f'{fn}.counts.pickle'
+                idf = self.home_dir / f'{fn}.ids.pickle'
         
             ex1,ex2 = False,False
             try:
@@ -427,7 +452,7 @@ class counter:
                     ms = matches(self.name)
                     if len(ms):
                         print('Did you mean ', ", ".join(ms))
-                    raise Exception('file not found')
+                    raise Exception('file not found', ctf)
 
             elif self.paradigm == 'many_file':
                 # don't load anything, it's lazy loaded now...
@@ -452,11 +477,18 @@ class counter:
             # lazy loading for multi-file setup
             if self.paradigm == 'many_file' and self.name is not None:
                 typ = '.'.join(c)
-                ctf = f'{self.name}.counts~{typ}.pickle'
+                print(f'loading count file {self.name} / {typ}')
+                if (self.home_dir / self.name).is_dir():
+                    ctf = self.home_dir / self.name / f'counts~{typ}.pickle'
+                else:
+                    ctf = self.home_dir / f'{self.name}.counts~{typ}.pickle'
+
                 if Path(ctf).exists():
                     with open(ctf, 'rb') as inf:
                         self.counts[c] =  pickle.load(inf)                
                     return
+                else:
+                    raise Exception('file not found', ctf)
 
             #self.counts[c] = np.zeros( tuple([100]*len(c)), dtype=object ) # initialize small N-attrs sized array... agh np.int16 overflows easily... gotta upgrade to object?
             #self.counts[c] = DOK( tuple([100]*len(c)) )
@@ -641,10 +673,14 @@ class counter:
     
     def items(self, *typs):
         from .. import make_cross
-        typsk = tuple(sorted(typs))
+
+        order = sorted(range(len(typs)), key=lambda x:typs[x])
+        typsk = tuple(typs[i] for i in order)
         self.loadinit(typsk)
 
+
         for item, c in self.counts[ typsk ].items():
+            item = [item[o] for o in order]
             
             if False:
                 t = make_cross({
@@ -653,15 +689,12 @@ class counter:
                 })
             else:
                 if self.typ == 'idmap':
-                    t = tuple([
-                        self.names[t][ item[ typsk.index(t) ] ] 
-                        for ti,t in enumerate(typs)
-                    ])
+                    t = tuple(
+                        self.names[typ][name] 
+                        for typ,name in zip(typsk, item)
+                    )
                 elif self.typ == 'ddict':
-                    t = tuple([
-                        item[ typsk.index(x) ]
-                        for x in typs
-                    ])
+                    t = tuple(item)
 
                 else:
                     raise Exception("invalid typ")
@@ -686,7 +719,7 @@ class counter:
                 yield [x[0] for x in item]
 
 
-    def trend(self, dtype, name, years):
+    def trend(self, dtype, name, years=None):
         from .time_trend import TimeTrend
         return TimeTrend(
             dtype = dtype,
@@ -720,7 +753,7 @@ class counter:
 
 
     
-    def delete(self, typ, which):        
+    def _old_delete(self, typ, which):        
         for cnames in self.counts:
             if typ not in cnames:
                 continue
@@ -751,7 +784,7 @@ class counter:
             del_index = ckey.index( typ )
             self.counts[ckey] = np.delete( cur_count, del_idx_np, axis=del_index )
         
-    def prune_zeros(self):
+    def _old_prune_zeros(self):
         typs = self.ids.keys()
         
         for typ in typs:
@@ -781,21 +814,45 @@ class counter:
                 name = self.name
 
         if self.paradigm == 'one_file':
-            with open(f'{name}.counts.pickle', 'wb') as outf:
+            with open(self.home_dir / f'{name}.counts.pickle', 'wb') as outf:
                 pickle.dump(self.counts, outf)
 
-            with open(f'{name}.ids.pickle', 'wb') as outf:
+            with open(self.home_dir / f'{name}.ids.pickle', 'wb') as outf:
                 pickle.dump(self.ids, outf)
 
         elif self.paradigm == 'many_file':
             for typ, cc in self.counts.items():
                 typ = '.'.join(sorted(typ))
-                with open(f'{name}.counts~{typ}.pickle', 'wb') as outf:
+                with open(self.home_dir / f'{name}.counts~{typ}.pickle', 'wb') as outf:
                     pickle.dump(cc, outf)
 
             if self.typ == 'idmap':
-                with open(f'{name}.ids.pickle', 'wb') as outf:
+                with open(self.home_dir / f'{name}.ids.pickle', 'wb') as outf:
                     pickle.dump(self.ids, outf)
             
     def summarize(self):
         print( [(k, c.shape) for k,c in self.counts.items()])
+
+
+    # ///////////    variable functions   //////////
+
+    def save_variable(self, name, val):
+        import pickle
+        pickle.dump( val, self.path.joinpath(name).open('wb') )
+
+    def load_variable(self, name):
+        with open(self.path.joinpath( name ), 'rb') as inf:
+            return pickle.loads( inf )
+
+
+    # ///////////    counter metadata    ///////////
+    
+    def __setitem__(self, k, v):
+        self.meta[k] = v
+        self.save_variable('_attributes', self.meta)
+
+    def __getitem__(self, k):
+        return self.meta[k]
+
+    def __contains__(self, k):
+        return k in self.meta

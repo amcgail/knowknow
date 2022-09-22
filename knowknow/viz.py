@@ -436,7 +436,7 @@ def yearly_counts_table_simp(
 
         trends = []
         for i, tname in enumerate(who[col_i * NROWS: (col_i + 1) * NROWS]):
-            tt = np.array(dta.trend('c', tname).cits(yearmin, yearmax))
+            tt = np.array(list(dta.trend('c', tname, (yearmin, yearmax))))
 
             # print(yearmin,yearmax)
             trends.append((tname, tt))
@@ -530,7 +530,7 @@ def yearly_counts_table(
 
         trends = []
         for i, tname in enumerate(who[col_i * NROWS: (col_i + 1) * NROWS]):
-            tt = np.array(dta.trend('c', tname).cits(yearmin, yearmax))
+            tt = np.array(list(dta.trend('c', tname, (yearmin, yearmax))))
 
             #print(yearmin,yearmax)
             trends.append((tname, tt))

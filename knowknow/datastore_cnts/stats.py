@@ -22,18 +22,28 @@ def top_decade_stratified(dataset, what, yRange=None, percentile=None, topN=None
     first_top = {}
 
     # ranges loop from 1940-1950 to 1980-1990, in 1-year increments
+    have_some = set( x for x,c in dataset.items(what) if c >= 5 )
+    
+    count_in_range_all = defaultdict(lambda:defaultdict(int))
+    for (item, fy), count in dataset.items(what, 'fy'):
+        if count == 0:
+            continue
+        if item not in have_some:
+            continue
+        
+        for RANGE_START, RANGE_END in zip(
+                range(start, end - 10 + 1),
+                range(start + 10, end + 1)
+        ):
+            if RANGE_END >= fy >= RANGE_START:
+                count_in_range_all[RANGE_START][item] += count
 
     for RANGE_START, RANGE_END in zip(
             range(start, end - 10 + 1),
             range(start + 10, end + 1)
     ):
 
-        count_in_range = defaultdict(int)
-        for (item, fy), count in dataset.items(what, 'fy'):
-            if count == 0:
-                continue
-            if RANGE_END >= fy >= RANGE_START:
-                count_in_range[item] += count
+        count_in_range = count_in_range_all[RANGE_START]
 
         counts = list(count_in_range.values())
         if not len(counts):
