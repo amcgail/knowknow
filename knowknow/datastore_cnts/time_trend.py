@@ -234,29 +234,30 @@ class TimeTrend:
         self.total = sum(self.c.values())
         self.totalprop = sum(self.cp.values())
         
-        if self.dtype == 'c':
-            # extracts some extra information from the name
+        if False:
+            if self.dtype == 'c':
+                # tries to extract some extra information from the name
 
-            if 'type' in self.dataset:
-                
-                self.type = 'article'
-                if self.dataset['type'] == 'wos':
-                    sp = self.name.split("|")
+                if 'type' in self.dataset:
+                    
+                    self.type = 'article'
+                    if self.dataset['type'] == 'wos':
+                        sp = self.name.split("|")
 
-                    if not len(sp):
-                        print('Wtf',sp)
-                        raise
+                        if not len(sp):
+                            print('Wtf',sp)
+                            raise
 
-                    try:
-                        self.pub = int(sp[1])
-                        self.type = 'article'
-                    except ValueError:
-                        self.type = 'book'
-                        #self.pub = pubyears[self.name]
+                        try:
+                            self.pub = int(sp[1])
+                            self.type = 'article'
+                        except ValueError:
+                            self.type = 'book'
+                            #self.pub = pubyears[self.name]
 
-                elif self.dataset['type'] == 'jstor':
-                    inparens = re.findall(r'\(([^)]+)\)', self.name)[0]
-                    self.pub = int(inparens)
+                    elif self.dataset['type'] == 'jstor':
+                        inparens = re.findall(r'\(([^)]+)\)', self.name)[0]
+                        self.pub = int(inparens)
 
     def avg_between(self, A, B): # including B
         return self.sum_between(A, B) / (B-A+1)

@@ -670,7 +670,16 @@ class counter:
 
     def keys(self, typ):
         return list(self.names[typ])
-    
+
+    def map(self, fun, processes_count=10, *typs):
+        import math
+        import numpy as np
+        from timebudget import timebudget
+        from multiprocessing import Pool
+
+        pool = Pool(processes_count)
+        return pool.map(fun, self.items(*typs))  
+
     def items(self, *typs):
         from .. import make_cross
 

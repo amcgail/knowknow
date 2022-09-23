@@ -106,7 +106,6 @@ def births_deaths(tt,  # the trend this should be calculated on
                   forward_view=10,  # years to look forward for comparison
                   backward_view=5  # minimum years to look back for comparison
                   ):
-    cits = tt.cits()
 
     births = [tt.first]
     deaths = []
