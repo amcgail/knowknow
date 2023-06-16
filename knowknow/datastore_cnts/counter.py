@@ -30,7 +30,6 @@ while True:
 
 
 
-
 class wos:
     
     def __init__(
@@ -372,47 +371,50 @@ if False:
             return print(what)
 
 
-class counter:
+class CountHelper:
     """
     The counter class manages coocurrence counts.
     It is useful for storing and retrieving them with memory and disk-space efficiently,
         and for containing maintenance and analysis functions.
-    It is written at relatively high level of generality, 
+    It is written at a relatively high level of generality,
         to reduce overall code size.
-    Initiate a counter with its name, 
-        which identifies it in the Dataset.
+
+    Giving the counter a name will attempt to load a pre-existing counter.
+    If you don't give a name, it starts blank. You can then count and save the counts later.
     """
-    def __init__(self, name=None, typ="ddict", paradigm='one_file', home_dir=None):
+
+    def __init__(self, name=None, typ="ddict", paradigm='many_file', home_dir=None):
         import pickle
 
         self.name = name
         self.typ = typ
         self.paradigm = paradigm
+        self.home_dir = home_dir
+
+        if self.home_dir is None:
+            self.home_dir = env.variable_dir
+        self.home_dir = Path(self.home_dir)
 
         self._sortsave = {}
-        
+
         self.counts = {}
         self.ids = {}
         self.names = {}
 
-        self.home_dir = home_dir
-        if self.home_dir is None:
-            self.home_dir = env.variable_dir
-        self.home_dir = Path(self.home_dir)
-        
-        self.path = self.home_dir.joinpath(self.name)
-        self.path.mkdir(exist_ok=True)
-
-        self.meta = {}
-        ap = self.path / '_attributes'
-        if ap.exists():
-            with ap.open('rb') as inf:
-                self.meta = pickle.load(inf)
-        else:
-            with ap.open('wb') as outf:
-                pickle.dump(self.meta, outf)
 
         if self.name is not None:
+            self.path = self.home_dir.joinpath(self.name)
+            self.path.mkdir(exist_ok=True)
+
+            self.meta = {}
+            ap = self.path / '_attributes'
+            if ap.exists():
+                with ap.open('rb') as inf:
+                    self.meta = pickle.load(inf)
+            else:
+                with ap.open('wb') as outf:
+                    pickle.dump(self.meta, outf)
+
             fn = self.name
 
             if (self.home_dir / self.name).is_dir():
@@ -421,13 +423,13 @@ class counter:
             else:
                 ctf = self.home_dir / f'{fn}.counts.pickle'
                 idf = self.home_dir / f'{fn}.ids.pickle'
-        
-            ex1,ex2 = False,False
+
+            ex1, ex2 = False, False
             try:
-                ex1,ex2 = Path(ctf).exists(), Path(idf).exists()
-            except OSError: # wtf windows??
+                ex1, ex2 = Path(ctf).exists(), Path(idf).exists()
+            except OSError:  # wtf windows??
                 pass
-                    
+
             if self.typ == 'idmap':
                 if not ex2:
                     print("no id.pickle file // setting typ='ddict'")
@@ -437,12 +439,12 @@ class counter:
                     self.ids = pickle.load(inf)
 
                 self.names = {
-                    cname: {i:n for n,i in myids.items()}
-                    for cname,myids in self.ids.items()
+                    cname: {i: n for n, i in myids.items()}
+                    for cname, myids in self.ids.items()
                 }
 
             if self.paradigm == 'one_file':
-                
+
                 if Path(ctf).exists():
                     print(f'Loading {name} from disk...')
                     with open(ctf, 'rb') as inf:
@@ -461,8 +463,7 @@ class counter:
             else:
                 raise Exception("use an acceptable paradigm. this will bust code")
 
-
-    def no_duplicate(self): # this doesn't copy the data structures...
+    def no_duplicate(self):  # this doesn't copy the data structures...
         c = counter()
         c.counts = self.counts
         c.ids = self.ids
@@ -471,7 +472,6 @@ class counter:
 
     def loadinit(self, c):
         c = tuple(sorted(c))
-
         if c not in self.counts:
 
             # lazy loading for multi-file setup
@@ -485,96 +485,81 @@ class counter:
 
                 if Path(ctf).exists():
                     with open(ctf, 'rb') as inf:
-                        self.counts[c] =  pickle.load(inf)                
+                        self.counts[c] = pickle.load(inf)
                     return
                 else:
-                    raise Exception('file not found', ctf)
+                    pass
 
-            #self.counts[c] = np.zeros( tuple([100]*len(c)), dtype=object ) # initialize small N-attrs sized array... agh np.int16 overflows easily... gotta upgrade to object?
-            #self.counts[c] = DOK( tuple([100]*len(c)) )
+            # self.counts[c] = np.zeros( tuple([100]*len(c)), dtype=object ) # initialize small N-attrs sized array... agh np.int16 overflows easily... gotta upgrade to object?
+            # self.counts[c] = DOK( tuple([100]*len(c)) )
             # init some zeros if it doesn't exist
             self.counts[c] = defaultdict(int)
-        
-                
+
     ###############   FOR COUNTING   ####################
-    
+
     def count(self, info, combinations=[], scale=1):
         """
-        `info` is a dictionary of information about the entity.
+        `info` is a dictionary of information about the entity, or an iterator of such dictionaries.
         `combinations` is a list of the combinations of keys in `info` which the counter should count
         """
 
-        if False: # put this in an except phrase somewhere if you really want it here
+        # we order all keys alphabetically for consistency
+        combinations = [
+            tuple(sorted(x)) for x in combinations
+        ]
+
+        if False:  # put this in an except phrase somewhere if you really want it here
             ask = set(y for x in combinations for y in x)
             have = set(info)
 
-            if not ask.issubset( have ):
-                ask_s = ", ".join( sorted( ask ) )
-                have_s = ", ".join( sorted( have ) )
+            if not ask.issubset(have):
+                ask_s = ", ".join(sorted(ask))
+                have_s = ", ".join(sorted(have))
                 raise Exception(f'Asked to count {ask_s}, have {have_s}.')
 
         if self.typ == "idmap":
-
             # do once for many combos
             ids = {
-                k:self.idof( k, v )
-                for k,v in info.items()
+                k: self.idof(k, v)
+                for k, v in info.items()
             }
-            
-            for c in combinations:
-                if c not in self._sortsave:
-                    self._sortsave[c] = tuple(sorted(c)) # consistency
 
-                c = self._sortsave[c]
-                # dim = len(c)
-                # cname = ".".join(sorted(c))
-                
+            for c in combinations:
                 self.loadinit(c)
-                self.counts[c][ tuple( ids[ck] for ck in c ) ] += scale
+                self.counts[c][tuple(ids[ck] for ck in c)] += scale
 
         elif self.typ == "ddict":
-
             for c in combinations:
-                # dim = len(c)
-                # cname = ".".join(sorted(c))
-                
-                if c not in self._sortsave:
-                    self._sortsave[c] = tuple(sorted(c)) # consistency
-
-                c = self._sortsave[c]
-                # dim = len(c)
-                # cname = ".".join(sorted(c))
-                
                 self.loadinit(c)
-                self.counts[c][ tuple( info[ck] for ck in c ) ] += scale
+                self.counts[c][tuple(info[ck] for ck in c)] += scale
 
     # returns id, or makes a new one.
     # often needs to expand the arrays
     def idof(self, kind, name):
-            
+
         # if you've never seen it, add this ID to the dict
         if name not in self.ids[kind]:
             new_id = len(self.ids[kind])
             self.ids[kind][name] = new_id
             self.names[kind][new_id] = name
-            
+
             if False:
                 # now have to expand all the np arrays...
                 # but only if they're arrays!
                 # have to loop through all series, because you have to expand fy.ty.t as well as t :O
                 for k in self.counts:
-                    if not kind in k: # remember k is a tuple... kind is a string representing a type of count
+                    if not kind in k:  # remember k is a tuple... kind is a string representing a type of count
                         continue
-                        
+
                     arr_index = k.index(kind)
-                    
+
                     """
                     # no need to pad if it's already big enough
                     current_shape = self.counts[k].shape[arr_index]
                     if current_shape >= new_id+1:
                         continue
                     """
-                        
+
                     """
                     self.counts[k] = np.pad( 
                         self.counts[k], 
@@ -595,41 +580,40 @@ class counter:
                         for dim in range(len(k))
                     ))
                     """
-                    
+
                     """
                     self.counts[k].shape = tuple(
                         int( current_shape*( 1 + 0.25*(dim==arr_index)) )
                         for dim in range(len(k))
                     )
                     """
-            
+
         return self.ids[kind][name]
 
     def nameof(self, kind, id):
         return self.names[kind][id]
-                
-                
+
     ###############   FOR RECALL   ####################
-        
+
     def __call__(self, *args, **kwargs):
         cname = tuple(sorted(kwargs.keys()))
         self.loadinit(cname)
-        noneKeys = {k for k,v in kwargs.items() if v is None}
-        notNoneKeys = {k for k,v in kwargs.items() if v is not None}
+        noneKeys = {k for k, v in kwargs.items() if v is None}
+        notNoneKeys = {k for k, v in kwargs.items() if v is not None}
 
         if len(noneKeys):
             def gen():
-                        
-                #wh = np.where( self.counts[cname] > 0 )
+
+                # wh = np.where( self.counts[cname] > 0 )
                 for parts in self.counts[cname]:
                     myc = self.counts[cname][parts]
-                    nameparts = {kind:self.names[kind][p] for kind,p in zip(cname, parts)}
+                    nameparts = {kind: self.names[kind][p] for kind, p in zip(cname, parts)}
 
                     bugger = False
                     # add up all the parts that make sense...
                     for k in notNoneKeys:
                         if nameparts[k] != kwargs[k]:
-                            bugger=True
+                            bugger = True
                             break
                     if bugger:
                         continue
@@ -646,18 +630,18 @@ class counter:
             final = pd.DataFrame(list(gen()))
             final = final.sort_values(sorted(noneKeys))
             return final
-        
+
         if self.typ == "idmap":
             # just figuring out what the proper index in the matrix is...
             my_id = []
             for cpart in cname:
-                if kwargs[cpart] not in self.ids[ cpart ]:
+                if kwargs[cpart] not in self.ids[cpart]:
                     return 0
-                my_id.append( self.ids[ cpart ][ kwargs[cpart] ] )
+                my_id.append(self.ids[cpart][kwargs[cpart]])
 
             my_id = tuple(my_id)
 
-            return self.counts[ cname ][ my_id ]
+            return self.counts[cname][my_id]
 
         elif self.typ == "ddict":
 
@@ -665,11 +649,11 @@ class counter:
                 kwargs[cn] for cn in cname
             )]
 
-        
-        
-
     def keys(self, typ):
-        return list(self.names[typ])
+        if self.typ == 'idmap':
+            return list(self.names[typ])
+        else:
+            return sorted(set(self.counts[typ]))
 
     def map(self, fun, processes_count=10, *typs):
         import math
@@ -678,29 +662,31 @@ class counter:
         from multiprocessing import Pool
 
         pool = Pool(processes_count)
-        return pool.map(fun, self.items(*typs))  
+        return pool.map(fun, self.items(*typs))
 
     def items(self, *typs):
         from .. import make_cross
 
-        order = sorted(range(len(typs)), key=lambda x:typs[x])
-        typsk = tuple(typs[i] for i in order)
+        # order = sorted(range(len(typs)), key=lambda x:typs[x])
+        # typsk = tuple(typs[i] for i in order)
+
+        typo = sorted(range(len(typs)), key=lambda x:typs[x])
+        typsk = tuple(typs[i] for i in typo)
         self.loadinit(typsk)
 
+        for item, c in self.counts[typsk].items():
+            # item = [item[o] for o in order]
 
-        for item, c in self.counts[ typsk ].items():
-            item = [item[o] for o in order]
-            
             if False:
                 t = make_cross({
-                    t: self.names[t][ item[ typsk.index(t) ] ] 
-                    for ti,t in enumerate(typs)
+                    t: self.names[t][item[typsk.index(t)]]
+                    for ti, t in enumerate(typs)
                 })
             else:
                 if self.typ == 'idmap':
                     t = tuple(
-                        self.names[typ][name] 
-                        for typ,name in zip(typsk, item)
+                        self.names[typ][name]
+                        for typ, name in zip(typsk, item)
                     )
                 elif self.typ == 'ddict':
                     t = tuple(item)
@@ -710,6 +696,9 @@ class counter:
 
             if len(t) == 1:
                 t = t[0]
+            else:
+                t = tuple(t[i] for i in typo)
+
             yield (t, c)
 
         return
@@ -724,17 +713,16 @@ class counter:
 
         for item in product(*[parts[t] for t in typs]):
             print(item)
-            if self( **dict(zip(typs, [x[0] for x in item])) ) > 0:
+            if self(**dict(zip(typs, [x[0] for x in item]))) > 0:
                 yield [x[0] for x in item]
-
 
     def trend(self, dtype, name, years=None):
         from .time_trend import TimeTrend
         return TimeTrend(
-            dtype = dtype,
-            name = name,
-            dataset = self,
-            years = years
+            dtype=dtype,
+            name=name,
+            dataset=self,
+            years=years
         )
 
     def drop(self, typ):
@@ -756,49 +744,47 @@ class counter:
         for k in self.counts:
             if any(kp == typ for kp in k):
                 todrop.append(k)
-        
+
         for td in todrop:
             self.drop(td)
 
-
-    
-    def _old_delete(self, typ, which):        
+    def _old_delete(self, typ, which):
         for cnames in self.counts:
             if typ not in cnames:
                 continue
-                
+
         del_idx = set(self.ids[typ][i] for i in which)
         del_idx_np = np.array(sorted(del_idx))
         keep_idx = set(self.ids[typ].values()).difference(del_idx)
         keep_idx_np = np.array(sorted(keep_idx))
-        
-        print(f"Deleting {len(del_idx)/1e6:0.1f}M. Leaving {len(keep_idx):,}.")
+
+        print(f"Deleting {len(del_idx) / 1e6:0.1f}M. Leaving {len(keep_idx):,}.")
 
         new_ids = {}
         new_id_i = 0
-        for t,i in sorted( self.ids[typ].items(), key=lambda x:x[1] ):
+        for t, i in sorted(self.ids[typ].items(), key=lambda x: x[1]):
             if i not in keep_idx:
                 continue
 
             new_ids[t] = new_id_i
             new_id_i += 1
-            
+
         self.ids[typ] = new_ids
-        
+
         for ckey, c in self.counts.items():
             if typ not in ckey:
                 continue
 
             cur_count = self.counts[ckey]
-            del_index = ckey.index( typ )
-            self.counts[ckey] = np.delete( cur_count, del_idx_np, axis=del_index )
-        
+            del_index = ckey.index(typ)
+            self.counts[ckey] = np.delete(cur_count, del_idx_np, axis=del_index)
+
     def _old_prune_zeros(self):
         typs = self.ids.keys()
-        
+
         for typ in typs:
             base_count = self.counts[(typ,)]
-            zero_idx = [ ti for ti,c in enumerate(base_count) if c == 0 ]
+            zero_idx = [ti for ti, c in enumerate(base_count) if c == 0]
             if not len(zero_idx):
                 continue
 
@@ -811,51 +797,51 @@ class counter:
                     continue
 
                 cur_count = self.counts[ckey]
-                del_index = ckey.index( typ )
-                self.counts[ckey] = np.delete( cur_count, del_cols, axis=del_index )
-                
+                del_index = ckey.index(typ)
+                self.counts[ckey] = np.delete(cur_count, del_cols, axis=del_index)
+
     def save(self, name=None, typ=None):
 
-        if name is None:
-            if self.name is None:
-                raise Exception('please give a name for the dataset')
-            else:
-                name = self.name
+        if name is not None:
+            self.name = name
+
+        if self.name is None:
+            raise Exception('please give a name for the dataset')
 
         if self.paradigm == 'one_file':
-            with open(self.home_dir / f'{name}.counts.pickle', 'wb') as outf:
-                pickle.dump(self.counts, outf)
-
-            with open(self.home_dir / f'{name}.ids.pickle', 'wb') as outf:
-                pickle.dump(self.ids, outf)
+            self.save_variable('counts', self.counts)
+            self.save_variable('ids', self.ids)
 
         elif self.paradigm == 'many_file':
             for typ, cc in self.counts.items():
                 typ = '.'.join(sorted(typ))
-                with open(self.home_dir / f'{name}.counts~{typ}.pickle', 'wb') as outf:
-                    pickle.dump(cc, outf)
+                self.save_variable(f'counts~{typ}', cc)
 
             if self.typ == 'idmap':
-                with open(self.home_dir / f'{name}.ids.pickle', 'wb') as outf:
-                    pickle.dump(self.ids, outf)
-            
-    def summarize(self):
-        print( [(k, c.shape) for k,c in self.counts.items()])
+                self.save_variable('ids', self.ids)
 
+    def summarize(self):
+        print([(k, c.shape) for k, c in self.counts.items()])
 
     # ///////////    variable functions   //////////
 
     def save_variable(self, name, val):
         import pickle
-        pickle.dump( val, self.path.joinpath(name).open('wb') )
+        (self.home_dir / self.name).mkdir(exist_ok=True)
+
+        name = name + ".pickle"
+        with (self.home_dir / self.name / name).open('wb') as outf:
+            pickle.dump(val, outf)
+
+
 
     def load_variable(self, name):
-        with open(self.path.joinpath( name ), 'rb') as inf:
-            return pickle.loads( inf )
-
+        import pickle
+        with (self.home_dir / self.name / name).open('rb') as inf:
+            return pickle.loads(inf)
 
     # ///////////    counter metadata    ///////////
-    
+
     def __setitem__(self, k, v):
         self.meta[k] = v
         self.save_variable('_attributes', self.meta)

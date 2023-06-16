@@ -31,6 +31,9 @@ def _csv_iterator(base):
     files = list(base.glob("**/*.txt"))
     fprintskip = max( int((len(files) / 20)//1), 1 )
 
+    from time import time
+    start_t = time()
+
     for i, f in enumerate(files):
         
         try:
@@ -44,6 +47,10 @@ def _csv_iterator(base):
         if (i+1) % fprintskip == 0:
             print("File %s/%s: %s" % (i, len(files), f.name))
             print("Document: %s" % dcount)
+
+            elapsed = time() - start_t
+            togo = (elapsed/i) * ( len(files) - i ) 
+            print(f"{elapsed:0.0f}s elapsed, {togo/60:0.0f}m to go.")
 
         for r in rows:
             yield r
@@ -60,6 +67,9 @@ def _txt_iterator(base):
     
     fprintskip = max( int((len(files) / 20)//1), 1 )
 
+    from time import time
+    start_t = time()
+
     for i,fn in enumerate(files):
         with fn.open(encoding='utf8') as inf:
             recs = inf.read()
@@ -68,6 +78,10 @@ def _txt_iterator(base):
             if (i+1) % fprintskip == 0:
                 print("File %s/%s: %s" % (i, len(files), fn.name))
                 print("Document: %s" % dcount)
+
+                elapsed = time() - start_t
+                togo = (elapsed/i) * ( len(files) - i ) 
+                print(f"{elapsed:0.0f}s elapsed, {togo/60:0.0f}m to go.")
 
             for r in recs:
 

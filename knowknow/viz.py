@@ -1,4 +1,5 @@
 from email.policy import default
+from matplotlib import cm
 from . import *
 
 __all__ = [
@@ -20,6 +21,7 @@ def key2name(tname, truncate=None):
 
     return tstr
 
+# normalize the matrix by columns
 def _normalize(mat, axis=0):
     if axis==0: # rows
         return mat/mat.sum(axis=1)[:,None]
@@ -35,12 +37,13 @@ def matrix(db,
     typ='docs', plot=False, result=None, 
     norm=None, trans=False, includeComplement=False, 
     plt_kwargs={}, remove_cohorts=None, filt=None, 
+    vrange_cutoff=0.001,
     **kwargs
 ):
     
     from collections import OrderedDict
 
-    assert(isinstance(db, Dataset) or isinstance(db, datastore_cnts.counter.counter))
+    assert(isinstance(db, Dataset) or isinstance(db, datastore_cnts.counter.CountHelper))
 
     if plot and result is None:
         result = False
@@ -131,7 +134,7 @@ def matrix(db,
 
 
     mat = np.array(list(mk_array()))
-    print(mat)
+    #print(mat)
 
     if remove_cohorts is not None:
         assert(type(remove_cohorts) == dict)
@@ -178,9 +181,11 @@ def matrix(db,
         from . import plt
         fig = plt.figure(figsize=(20, 4))  # plt.subplots()#
 
+        mn = min(vrange_cutoff, 1-vrange_cutoff)
         default_plt_args = {
-            'vmin':max(0,np.quantile(mat, 0.1)),
-            'vmax':min(1,np.quantile(mat, 0.9))
+            'vmin':max(0,np.quantile(mat, mn)),
+            'vmax':min(1,np.quantile(mat, 1-mn)),
+            'cmap': cm.jet
         }
 
         plt_kwargs = dict(default_plt_args, **plt_kwargs)
@@ -188,6 +193,7 @@ def matrix(db,
         plt.imshow(mat, interpolation='nearest', 
             **plt_kwargs
         )
+        plt.colorbar();
 
         if trans:
             xtick = by1
