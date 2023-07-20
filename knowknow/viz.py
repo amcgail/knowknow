@@ -193,7 +193,7 @@ def matrix(db,
         plt.imshow(mat, interpolation='nearest', 
             **plt_kwargs
         )
-        plt.colorbar();
+        #plt.colorbar();
 
         if trans:
             xtick = by1

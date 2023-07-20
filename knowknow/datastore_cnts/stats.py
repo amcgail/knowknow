@@ -32,15 +32,15 @@ def top_decade_stratified(dataset, what, yRange=None, percentile=None, topN=None
             continue
         
         for RANGE_START, RANGE_END in zip(
-                range(start, end - 10 + 1),
-                range(start + 10, end + 1)
+                range(start, end + 1 - 9),
+                range(start + 9, end + 1)
         ):
             if RANGE_END >= fy >= RANGE_START:
                 count_in_range_all[RANGE_START][item] += count
 
     for RANGE_START, RANGE_END in zip(
-            range(start, end - 10 + 1),
-            range(start + 10, end + 1)
+        range(start, end + 1 - 9),
+        range(start + 9, end + 1)
     ):
 
         count_in_range = count_in_range_all[RANGE_START]

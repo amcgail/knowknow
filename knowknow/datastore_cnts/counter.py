@@ -383,7 +383,7 @@ class CountHelper:
     If you don't give a name, it starts blank. You can then count and save the counts later.
     """
 
-    def __init__(self, name=None, typ="ddict", paradigm='many_file', home_dir=None):
+    def __init__(self, name=None, typ="ddict", paradigm='many_file', home_dir=None, file_prefix=''):
         import pickle
 
         self.name = name
@@ -401,6 +401,9 @@ class CountHelper:
         self.ids = {}
         self.names = {}
 
+        self.groupings = []
+
+        self.file_prefix = file_prefix
 
         if self.name is not None:
             self.path = self.home_dir.joinpath(self.name)
@@ -477,18 +480,23 @@ class CountHelper:
             # lazy loading for multi-file setup
             if self.paradigm == 'many_file' and self.name is not None:
                 typ = '.'.join(c)
-                print(f'loading count file {self.name} / {typ}')
-                if (self.home_dir / self.name).is_dir():
-                    ctf = self.home_dir / self.name / f'counts~{typ}.pickle'
-                else:
-                    ctf = self.home_dir / f'{self.name}.counts~{typ}.pickle'
 
-                if Path(ctf).exists():
-                    with open(ctf, 'rb') as inf:
-                        self.counts[c] = pickle.load(inf)
-                    return
-                else:
-                    pass
+                px = self.file_prefix
+                nm =  self.name
+
+                # different filenames heh
+                to_try = [
+                    self.home_dir / nm / f'{px}counts~{typ}.pickle',
+                    self.home_dir / nm / f'{px}{typ}.pickle',
+                    self.home_dir / nm / f'{px}{typ}',
+                ]
+
+                for ctf in to_try:
+                    if Path(ctf).exists():
+                        print(f'loading count file {ctf}')
+                        with open(ctf, 'rb') as inf:
+                            self.counts[c] = pickle.load(inf)
+                        return
 
             # self.counts[c] = np.zeros( tuple([100]*len(c)), dtype=object ) # initialize small N-attrs sized array... agh np.int16 overflows easily... gotta upgrade to object?
             # self.counts[c] = DOK( tuple([100]*len(c)) )
@@ -641,13 +649,24 @@ class CountHelper:
 
             my_id = tuple(my_id)
 
-            return self.counts[cname][my_id]
+            if my_id in self.counts:
+                return self.counts[cname][my_id]
+            else:
+                return 0
 
         elif self.typ == "ddict":
 
-            return self.counts[cname][tuple(
+            t = tuple(
                 kwargs[cn] for cn in cname
-            )]
+            )
+
+            # different formats sometimes...
+            if len(t) == 1 and t[0] in self.counts[cname]: t=t[0]
+
+            if t in self.counts[cname]:    
+                return self.counts[cname][t]
+            else:
+                return 0
 
     def keys(self, typ):
         if self.typ == 'idmap':
@@ -663,6 +682,27 @@ class CountHelper:
 
         pool = Pool(processes_count)
         return pool.map(fun, self.items(*typs))
+    
+    def cnt_keys(self):
+
+        # lazy loading for multi-file setup
+        if self.paradigm == 'many_file' and self.name is not None:
+            if (self.home_dir / self.name).is_dir():
+                paths = list((self.home_dir / self.name).glob("counts~*.pickle"))
+            else:
+                paths = list((self.home_dir).glob(f"{self.name}.counts~*.pickle"))
+
+            paths = [x.name for x in paths]
+            paths = [x.split('~')[1].split('.pickle')[0] for x in paths]
+            paths = [tuple(sorted(x.split('.'))) for x in paths]
+            return sorted(paths)
+
+        # older system.
+        # I'm ridiculous...
+        #avail = Path(env.variable_dir).joinpath(self.name).glob("doc ___ *")
+        #avail = [x.name for x in avail]
+        #avail = [x.split("___")[1].strip() for x in avail]
+        #return sorted(avail)
 
     def items(self, *typs):
         from .. import make_cross
@@ -676,6 +716,9 @@ class CountHelper:
 
         for item, c in self.counts[typsk].items():
             # item = [item[o] for o in order]
+
+            if type(item) != tuple:
+                item = (item,)
 
             if False:
                 t = make_cross({
