@@ -44,7 +44,7 @@ def download(
     res = r.json()
 
     if res['status'] != 'OK':
-        #raise Exception("There was an issue retrieving the dataset. Please check your persistent ID, and provide an API key if this is a DRAFT version.")
+        raise Exception("There was an issue retrieving the dataset. Please check your persistent ID, and provide an API key if this is a DRAFT version.")
         return None
 
     v = res['data']['latestVersion']

@@ -179,7 +179,7 @@ def matrix(db,
 
     if plot:
         from . import plt
-        fig = plt.figure(figsize=(20, 4))  # plt.subplots()#
+        fig = plt.figure(figsize=(mat.shape[1] / 5, mat.shape[0] / 5))
 
         mn = min(vrange_cutoff, 1-vrange_cutoff)
         default_plt_args = {

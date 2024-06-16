@@ -145,6 +145,11 @@ def doc_iterator(base, type, limit=None):
 
     for i, r in enumerate(it):
 
+        if i > 100 and yielded / i < 0.1:
+            print("Warning: less than 10% of documents are being yielded. This may be an error.")
+            print(r)
+            break
+
         if 'DT' not in r:
             continue
 

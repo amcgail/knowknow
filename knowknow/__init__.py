@@ -25,6 +25,8 @@ import numpy as np
 
 from logzero import logger
 
+from collections import OrderedDict
+
 from .exceptions import *
 
 from . import env
